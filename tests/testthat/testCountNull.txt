@@ -1,0 +1,4 @@
+"guide" "gene" "init_1" "dep_1"
+"g1" "gene1" 0 0
+"g2" "gene1" 0 0
+"g3" "gene1" 0 0
