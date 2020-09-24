@@ -9,8 +9,9 @@
 #' @importFrom stats optim
 #' @importFrom utils capture.output head timestamp write.table
 #' @importFrom Rcpp sourceCpp
-#' @importFrom Rcpp evalCpp
-#' @useDynLib ACER
+## usethis namespace: start
+#' @useDynLib ACER, .registration = TRUE
+## usethis namespace: end
 #' @param user_DataObj DataObj with all experimental data.
 #' @param user_ModelObj ModelObj with simple inferred parameters for model.
 #' @param fit_sample_parameter User option to fit by-sample parameters.

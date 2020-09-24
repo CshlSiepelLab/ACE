@@ -9,7 +9,7 @@
 #' @param size NumericVector
 #' @export
 get_nb_cpp <- function(mu, count, size) {
-    .Call('_ACER_get_nb_cpp', PACKAGE = 'ACER', mu, count, size)
+    .Call(`_ACER_get_nb_cpp`, mu, count, size)
 }
 
 #' get_pois_countVec
@@ -18,7 +18,7 @@ get_nb_cpp <- function(mu, count, size) {
 #' @param mu double
 #' @export
 get_pois_countVec <- function(count_vector, mu) {
-    .Call('_ACER_get_pois_countVec', PACKAGE = 'ACER', count_vector, mu)
+    .Call(`_ACER_get_pois_countVec`, count_vector, mu)
 }
 
 #' get_pois_muVec
@@ -26,7 +26,7 @@ get_pois_countVec <- function(count_vector, mu) {
 #' @param mu_vector NumericVector
 #' @export
 get_pois_muVec <- function(count, mu_vector) {
-    .Call('_ACER_get_pois_muVec', PACKAGE = 'ACER', count, mu_vector)
+    .Call(`_ACER_get_pois_muVec`, count, mu_vector)
 }
 
 #' get_norm_countVec
@@ -35,7 +35,7 @@ get_pois_muVec <- function(count, mu_vector) {
 #' @param var double
 #' @export
 get_norm_countVec <- function(count_vector, mu, var) {
-    .Call('_ACER_get_norm_countVec', PACKAGE = 'ACER', count_vector, mu, var)
+    .Call(`_ACER_get_norm_countVec`, count_vector, mu, var)
 }
 
 #' Function getLL
@@ -60,7 +60,7 @@ get_norm_countVec <- function(count_vector, mu, var) {
 #' @param var_params List of mean~variance model parameters (fit in ModelObj).
 #' @export
 getLL <- function(gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, master_freq, masterlib_key, cells_infected, init_scaling, dep_scaling, nsg_vals, var_params, step_size) {
-    .Call('_ACER_getLL', PACKAGE = 'ACER', gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, master_freq, masterlib_key, cells_infected, init_scaling, dep_scaling, nsg_vals, var_params, step_size)
+    .Call(`_ACER_getLL`, gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, master_freq, masterlib_key, cells_infected, init_scaling, dep_scaling, nsg_vals, var_params, step_size)
 }
 
 #' Function getLLNoInit
@@ -81,7 +81,7 @@ getLL <- function(gene_essentiality, guide_efficiency, sample_effects, init_coun
 #' @param var_params List of mean~variance model parameters (fit in ModelObj).
 #' @export
 getLLNoInit <- function(gene_essentiality, guide_efficiency, sample_effects, dep_counts, var_model, master_freq, masterlib_key, cells_infected, dep_scaling, nsg_vals, var_params, step_size) {
-    .Call('_ACER_getLLNoInit', PACKAGE = 'ACER', gene_essentiality, guide_efficiency, sample_effects, dep_counts, var_model, master_freq, masterlib_key, cells_infected, dep_scaling, nsg_vals, var_params, step_size)
+    .Call(`_ACER_getLLNoInit`, gene_essentiality, guide_efficiency, sample_effects, dep_counts, var_model, master_freq, masterlib_key, cells_infected, dep_scaling, nsg_vals, var_params, step_size)
 }
 
 #' Function getLLNoMaster
@@ -102,6 +102,6 @@ getLLNoInit <- function(gene_essentiality, guide_efficiency, sample_effects, dep
 #' @param var_params List of mean~variance model parameters (fit in ModelObj).
 #' @export
 getLLNoMaster <- function(gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, init_scaling, dep_scaling, nsg_vals, var_params, step_size) {
-    .Call('_ACER_getLLNoMaster', PACKAGE = 'ACER', gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, init_scaling, dep_scaling, nsg_vals, var_params, step_size)
+    .Call(`_ACER_getLLNoMaster`, gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, init_scaling, dep_scaling, nsg_vals, var_params, step_size)
 }
 
