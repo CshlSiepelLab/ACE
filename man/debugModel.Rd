@@ -12,6 +12,8 @@ debugModel(user_ModelObj, user_DataObj, extraObj = c(), printAll = F)
 \item{user_DataObj}{DataObj used to create ModelObj & ResObj.}
 
 \item{extraObj}{If you wanna throw in an extra object, go ahead.}
+
+\item{printAll}{Boolean; whether to print all object items; else prints named subset.}
 }
 \value{
 List of first 10 arg indices, with $flag argument for unusual entries.

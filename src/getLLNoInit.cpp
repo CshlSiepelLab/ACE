@@ -28,6 +28,7 @@ using std::log;
 //'         read depth and LFC ratio shifts due to guide drop-out.
 //' @param nsg_vals Vector of percent of cells infected (unobserved, integrating over.)
 //' @param var_params List of mean~variance model parameters (fit in ModelObj).
+//' @param step_size Intervals of infected cells for discrete integral evaluation.
 //' @export
 // [[Rcpp::export]]
 double getLLNoInit(NumericVector gene_essentiality, NumericVector guide_efficiency,

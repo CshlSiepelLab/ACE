@@ -20,6 +20,8 @@ getLfcDt(
 
 \item{isSim}{Boolean whether data counts simulated; if so, true phi in name.}
 
+\item{master_freq_dt}{Data.table of master library abundances if initial read counts absent.}
+
 \item{use_base_counts}{Depleted count -matched data.table to use as the
 denominator for fold change.}
 
@@ -30,8 +32,6 @@ denominator for fold change.}
 \item{lfcFileName}{Optional name of output file of lfc values.}
 
 \item{writeFile}{Boolean default false; should output file be written.}
-
-\item{neg_ctrl_file}{Optional file of negative control genes to normalize fold changes.}
 }
 \description{
 Takes geometric average across all guides and samples applying to a gene.

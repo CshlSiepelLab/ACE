@@ -29,7 +29,9 @@ deriveSampleScaling(
 
 \item{use_master_library}{Boolean}
 
-\item{use_net_ctrl}{Boolean}
+\item{use_neg_ctrl}{Boolean}
+
+\item{neg_ctrls}{Vector of gene name strings.}
 }
 \description{
 Function deriveSampleScaling

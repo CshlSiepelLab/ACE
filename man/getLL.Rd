@@ -53,6 +53,8 @@ read depth and LFC ratio shifts due to guide drop-out.}
 \item{nsg_vals}{Vector of percent of cells infected (unobserved, integrating over.)}
 
 \item{var_params}{List of mean~variance model parameters (fit in ModelObj).}
+
+\item{step_size}{Intervals of infected cells for discrete integral evaluation.}
 }
 \description{
 Function getLL

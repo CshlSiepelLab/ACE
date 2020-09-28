@@ -12,7 +12,8 @@
 #' @param user_DataObj all data; a DataObj.
 #' @param master_freq_dt normalized masterlibrary frequencies (log)
 #' @param use_master_library Boolean
-#' @param use_net_ctrl Boolean
+#' @param use_neg_ctrl Boolean
+#' @param neg_ctrls Vector of gene name strings.
 #' @importFrom stats sd median
 deriveSampleScaling <- function(user_DataObj,
                                 master_freq_dt,

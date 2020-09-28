@@ -255,7 +255,7 @@ DataObj <- R6Class("DataObj",
                                    cat('using samples: ', names(dep_counts[useSampleCols]))
                                    finalSampleNames <- names(self$dep_counts)
                                    
-                                   if (is.na(info_file)) self$sample_masterlib <- NA
+                                   if (!is.data.table(info_file)) self$sample_masterlib <- NA
                                    else {
                                      self$sample_masterlib <- info_file[sample %in% finalSampleNames,]
                                    }

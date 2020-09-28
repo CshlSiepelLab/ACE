@@ -5,19 +5,23 @@
 #' controls.  Adds a pseudocount of 0.5 to the count data after scaling all
 #' counts to 1e7 reads per sample. Returns log2 of dep/init ratio.
 #' @param user_DataObj DataObj to analyze.
-#' @param use_samples Default NA, return results for only a sample subset.
-#' @param getCI Default true, return confidence intervals per phi.  Sim only.
+#' @param isSim Boolean whether data counts simulated; if so, true phi in name.
+#' @param master_freq_dt Data.table of master library abundances if initial read counts absent.
 #' @param use_base_counts Depleted count -matched data.table to use as the
 #' denominator for fold change.
-#' @param isSim Boolean whether data counts simulated; if so, true phi in name.
+#' @param use_samples Default NA, return results for only a sample subset.
+#' @param getCI Default true, return confidence intervals per phi.  Sim only.
 #' @param lfcFileName Optional name of output file of lfc values.
-#' @param neg_ctrl_file Optional file of negative control genes to normalize fold changes.
 #' @param writeFile Boolean default false; should output file be written.
 #' @export
-getLfcDt <- function(user_DataObj, isSim,
+getLfcDt <- function(user_DataObj, 
+                     isSim,
                      master_freq_dt = NA,
-                     use_base_counts=NA, use_samples=NA, getCI=T,
-                     lfcFileName='lfc', writeFile = F) {
+                     use_base_counts=NA, 
+                     use_samples=NA, 
+                     getCI=T,
+                     lfcFileName='lfc', 
+                     writeFile = F) {
   # Set local definitions to prevent R check note due to data.table syntax.
   masterlib <- NULL
   gene <- NULL

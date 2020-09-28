@@ -8,6 +8,8 @@ debugData(user_DataObj, printAll = F)
 }
 \arguments{
 \item{user_DataObj}{DataObj used to create ModelObj & ResObj.}
+
+\item{printAll}{Boolean; whether to print all object items; else prints named subset.}
 }
 \value{
 List of first 10 entries, with $flag argument for unusual entries.

@@ -58,6 +58,7 @@ get_norm_countVec <- function(count_vector, mu, var) {
 #'         read depth and LFC ratio shifts due to guide drop-out.
 #' @param nsg_vals Vector of percent of cells infected (unobserved, integrating over.)
 #' @param var_params List of mean~variance model parameters (fit in ModelObj).
+#' @param step_size Intervals of infected cells for discrete integral evaluation.
 #' @export
 getLL <- function(gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, master_freq, masterlib_key, cells_infected, init_scaling, dep_scaling, nsg_vals, var_params, step_size) {
     .Call(`_ACER_getLL`, gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, master_freq, masterlib_key, cells_infected, init_scaling, dep_scaling, nsg_vals, var_params, step_size)
@@ -79,6 +80,7 @@ getLL <- function(gene_essentiality, guide_efficiency, sample_effects, init_coun
 #'         read depth and LFC ratio shifts due to guide drop-out.
 #' @param nsg_vals Vector of percent of cells infected (unobserved, integrating over.)
 #' @param var_params List of mean~variance model parameters (fit in ModelObj).
+#' @param step_size Intervals of infected cells for discrete integral evaluation.
 #' @export
 getLLNoInit <- function(gene_essentiality, guide_efficiency, sample_effects, dep_counts, var_model, master_freq, masterlib_key, cells_infected, dep_scaling, nsg_vals, var_params, step_size) {
     .Call(`_ACER_getLLNoInit`, gene_essentiality, guide_efficiency, sample_effects, dep_counts, var_model, master_freq, masterlib_key, cells_infected, dep_scaling, nsg_vals, var_params, step_size)
@@ -100,6 +102,7 @@ getLLNoInit <- function(gene_essentiality, guide_efficiency, sample_effects, dep
 #'         read depth and LFC ratio shifts due to guide drop-out.
 #' @param nsg_vals Vector of percent of cells infected (unobserved, integrating over.)
 #' @param var_params List of mean~variance model parameters (fit in ModelObj).
+#' @param step_size Intervals of infected cells for discrete integral evaluation.
 #' @export
 getLLNoMaster <- function(gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, init_scaling, dep_scaling, nsg_vals, var_params, step_size) {
     .Call(`_ACER_getLLNoMaster`, gene_essentiality, guide_efficiency, sample_effects, init_counts, dep_counts, var_model, init_scaling, dep_scaling, nsg_vals, var_params, step_size)

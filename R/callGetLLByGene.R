@@ -29,6 +29,10 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
       isProblem <- T
       printArgList <- T
     }
+    if (any(sapply(argList, function(i) any(is.null(unlist(i)))))) {
+      isProblem <- T
+      printArgList <- T
+    }
 
     if (printArgList) {
       tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
@@ -190,7 +194,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
     debugArgList(noInitArgList, argNames)
     ll <- do.call(getLLNoInit, noInitArgList)
   } else {
-    stop('invalid experimental design.')
+    stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
     print('NA or inf ll returned!')

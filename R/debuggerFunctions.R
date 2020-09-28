@@ -23,6 +23,7 @@ debugRes <- function(user_ResObj, user_ModelObj=NA, user_DataObj=NA) {
 #' Returns list of contents of DataObj.  For debugging with testthat.
 #' These are to test for programmer, rather than user, error.
 #' @param user_DataObj DataObj used to create ModelObj & ResObj.
+#' @param printAll Boolean; whether to print all object items; else prints named subset.
 #' @return List of first 10 entries, with $flag argument for unusual entries.
 #' @export
 debugData <- function(user_DataObj, printAll = F) {
@@ -82,6 +83,7 @@ debugData <- function(user_DataObj, printAll = F) {
 #' @param user_DataObj DataObj used to create ModelObj & ResObj.
 #' @param user_ModelObj ModelObj from DataObj.
 #' @param extraObj If you wanna throw in an extra object, go ahead.
+#' @param printAll Boolean; whether to print all object items; else prints named subset.
 #' @return List of first 10 arg indices, with $flag argument for unusual entries.
 #' @export
 debugModel <- function(user_ModelObj, user_DataObj, extraObj = c(), printAll = F) {

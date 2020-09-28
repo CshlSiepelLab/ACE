@@ -25,7 +25,6 @@
 optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_parameter=F,
                                     subset_genes = NA) {
   # Set local definitions to prevent R check note due to data.table syntax.
-  sample_effects <- NULL
   test_fit <- NULL
   ctrl_fit <- NULL
   all_fit <- NULL
@@ -116,6 +115,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
   sampleSubsets <- list("all"=1:ncol(user_DataObj$dep_counts))
   startEss <- rep(1, length(geneList))
   gene_essentiality <- startEss
+  sample_effects <- rep(1, ncol(user_DataObj$dep_counts))
   if (is.vector(user_ModelObj$test_sample_subtype_cols, mode='integer')) {
     sampleSubsets$test <- user_ModelObj$test_sample_subtype_cols
     sampleSubsets$ctrl <- sampleSubsets$all[!sampleSubsets$all %in% sampleSubsets$test]
@@ -134,6 +134,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
   # startEss <- gene_essentiality
   # guide_essentiality <- rep(gene_essentiality,
   # times = table(user_DataObj$guide2gene_map$gene))
+  # if (fit_sample_effects) {
 
   # TODO: final_ReturnObj <- ReturnObj$new(optObjList, user_DataObj, user_ModelObj)
   # @return List with:
