@@ -1,30 +1,21 @@
 ---
-title: "ACER: Analysis of CRISPR Essentaility in R"
-author: 'Elizabeth Hutton'
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{ACER: Analysis of CRISPR Essentaility in R}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+title: "ACE: Analysis of CRISPR Essentiality (in R)"
+author: "Elizabeth Hutton"
+date: "`r Sys.Date()`"
+description: >
+  This vignette walks through basic applications of ACE.
+output: 
+  github_document:
+    toc: true
+    toc_depth: 2
+bibliography: ace.bibtex
+link-citations: true
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r setup}
-# remove post-development.
-devtools::load_all('~/siepel/ACER', export_all = F)
-library(ACER)
-```
-
-
-```{r sample inputs}
-head(fread(system.file('extdata','countData.tsv', package='ACER')))
-```
 ## Tool Applications
 ACE (Analysis of CRISPR Essentiality) was designed to test for differential essentiality
 between sets of samples from a CRISPR knockout screen. Please see the ACE paper
@@ -56,24 +47,19 @@ forming a `ModelObj`.  Both the raw data and the estimated parameters are then
 provided to the main function, `optimizeModelParameters`, which uses expectation
 maximization to infer gene essentiality, guide efficiency, and sample effects.
 ```{r basic}
-newDataObj <- DataObj$new(masterFiles = system.file('extdata','masterLibrarySeq.tsv', package='ACER'),
-                          countFile = system.file('extdata','countData.tsv', package='ACER'),
-                          negCtrlFile = system.file('extdata','negCtrlGenes.txt', package='ACER'), 
-                          sampleInfoFile=system.file('extdata','sampleAnnotations.txt', package='ACER'),
-                          hasInitSeq = T)
-newModelObj <- ModelObj$new(user_DataObj = newDataObj,
-                            use_neg_ctrl=T,
-                            test_samples='test',
-                            use_master_library = F)
+library(ACER)
+newDataObj <- DataObj$new(masterFiles, countFile, negCtrlFile, guideCovarFile,
+                          sampleInfoFile, sampleMasterInfoFile)
+newModelObj <- ModelObj$new(user_DataObj = newDataObj)
 newResultsObj <- optimizeModelParameters(user_DataObj = newDataObj,
                                          user_ModelObj = newModelObj)
-writeResObj(newResultsObj)
 ```
                                           
 ## Differential Essentiality
-To obtain estimates of differential essentiality estimated by sample subtype,
-as opposed to global essentiality across all samples, the file
+To obtain estimates of differential essentiality, estimated by sample subtype,
+as opposed to global essentiality, estimated across all samples, the file
 `sampleInfoFile` must be provided with sample annotation information 
 to the original `DataObj`. Essentiality will be compared between samples with
 and without the annotation provided in the `ModelObj`'s `test_samples` parameter.
+
 

@@ -14,12 +14,14 @@
 #' @param use_master_library Boolean
 #' @param use_neg_ctrl Boolean
 #' @param neg_ctrls Vector of gene name strings.
+#' @param write_log Function to write messages to log.
 #' @importFrom stats sd median
 deriveSampleScaling <- function(user_DataObj,
                                 master_freq_dt,
                                 use_master_library,
                                 use_neg_ctrl,
-                                neg_ctrls) {
+                                neg_ctrls,
+                                write_log) {
   # locally binding variable names used for DataObj columns.
   sgrna <- NULL
   
@@ -32,15 +34,22 @@ deriveSampleScaling <- function(user_DataObj,
   # log of expected initial guide abundance.
   base_counts <- list()
   if (use_master_library & is.data.table(user_DataObj$sample_masterlib)) {
-    print('Scaling samples relative to matched masterlibrary')
+    write_log('Scaling samples relative to matched masterlibrary')
+    message('Scaling samples relative to matched masterlibrary')
     for (i in seq_along(names(user_DataObj$dep_counts))) {
       sampleName <- names(user_DataObj$dep_counts)[i]
       useMasterlib <- unlist(user_DataObj$sample_masterlib[sample==sampleName,
                                                            masterlib])
       masterlib <- master_freq_dt[user_DataObj$guide2gene_map$sgrna,
                                   ][[useMasterlib]]
-      neg_masterlib_freq <- masterlib[useGuides]
-      base_counts[[i]] <- neg_masterlib_freq
+      base_counts[[i]] <- masterlib[useGuides]
+      ### TODO - debug for test case ####
+      ### masterlibv is NA.
+      
+      write_log('masterlib')
+      write_log(head(masterlib))
+      write_log('useMasterlib')
+      write_log(useMasterlib)
     }
     matchedMlibDT <- as.data.table(lapply(names(user_DataObj$dep_counts),
                                           function(i) {
@@ -57,11 +66,12 @@ deriveSampleScaling <- function(user_DataObj,
                                        ncol = ncol(user_DataObj$dep_counts)),
                                 use.names = F)
   } else if (is.data.table(user_DataObj$init_counts)) {
-    print('Scaling samples relative to mean abundance in initial samples.')
+    write_log('Scaling samples relative to mean abundance in initial samples.')
+    message('Scaling samples relative to mean abundance in initial samples.')
     # Assuming no counts are depleted in the initial population.
     for (j in seq_along(names(user_DataObj$init_counts))) {
-      guideMeans <- user_DataObj$init_counts[, exp(rowMeans(log(.SD+0.5)))]
-      normCounts <- user_DataObj$init_counts[,(0.5+.SD)/sapply(seq_along(.SD),function(i)
+      guideMeans <- user_DataObj$init_counts[useGuides, exp(rowMeans(log(.SD+0.5)))]
+      normCounts <- user_DataObj$init_counts[useGuides,(0.5+.SD)/sapply(seq_along(.SD),function(i)
                                                median((0.5+user_DataObj$init_counts[[i]])/guideMeans[i]))]
       # get average percent abundance of each guide across all samples: guideMeans/sum(guideMeans)
       # assuming a common masterlibrary for all.
@@ -89,13 +99,16 @@ deriveSampleScaling <- function(user_DataObj,
                                        log(user_DataObj$cells_infected[i]))})
     if (any(sapply(init_scaling, is.na))) {
       naIdx <- which(is.na(init_scaling))
-      print("NA's found in init_scaling")
-      print(useGuides[1:10])
-      if (use_neg_ctrl) print(neg_ctrls[1:10])
-      print(names(user_DataObj$init_counts)[naIdx])
-      print(user_DataObj$init_counts[useGuides[1:10],naIdx, with=F])
-      print(user_DataObj$cells_infected[naIdx])
-      print(lapply(base_counts[naIdx], function(i) i[1:10]))
+      write_log("ERROR: NA's produced in calculation of init_scaling")
+      write_log(c('using guide indices: ',useGuides[1:10]))
+      if (use_neg_ctrl) write_log(c('10 neg ctrls: ',neg_ctrls[1:10]))
+      write_log(c('init samples at na: ',names(user_DataObj$init_counts)[naIdx]))
+      write_log(c('init counts in na samples: ',
+                  user_DataObj$init_counts[useGuides[1:10],naIdx, with=F]))
+      write_log(c('cells infected in na samples: '))
+      write_log(user_DataObj$cells_infected[naIdx])
+      write_log(c('base counts: ',
+                  sapply(base_counts[naIdx], function(i) i[1:10])))
       stop('NA in init_scaling.')
     }
   } else init_scaling <- NA
@@ -109,11 +122,11 @@ deriveSampleScaling <- function(user_DataObj,
     stop('No counts in any depleted samples, provide data for negative controls.')
   }
   if (any(sapply(dep_scaling, is.na))) {
-    print('NA in scaling parameter.')
+    write_log('ERROR: NA in scaling parameter.')
     naIdx <- which(is.na(dep_scaling))
-    print(names(user_DataObj$dep_counts)[naIdx])
-    print(master_freq_dt[1:10, .SD])
-    print(user_DataObj$dep_counts[useGuides[1:10], (naIdx), with=F])
+    write_log(names(user_DataObj$dep_counts)[naIdx])
+    write_log(master_freq_dt[1:10, .SD])
+    write_log(user_DataObj$dep_counts[useGuides[1:10], (naIdx), with=F])
     stop('NA in dep_scaling')
   }
 
@@ -125,8 +138,10 @@ deriveSampleScaling <- function(user_DataObj,
   dep_scaling_ratio <- unlist(user_DataObj$dep_counts[,lapply(.SD, function(i)
     sd(i/mean(i)))])
   if(any(dep_scaling_ratio > ref_scaling_ratio)) {
-    print('Excess of guides seem depleted; recommend using negative controls.')
-    cat('Using controls?: ', use_neg_ctrl, "\n")
+    message('Excess of guides seem depleted; recommend using negative controls.')
+    message('Using controls?: ', use_neg_ctrl, "\n")
+    write_log('Excess of guides seem depleted; recommend using negative controls.')
+    write_log('Using controls?: ', use_neg_ctrl, "\n")
   }
 
   return(list('init_scaling'=init_scaling, 'dep_scaling'=dep_scaling))

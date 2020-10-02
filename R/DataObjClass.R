@@ -73,6 +73,8 @@ DataObj <- R6Class("DataObj",
                                                        sampleMasterInfoFile = NA,
                                                        useSamples = NA) {
 
+                                   # Create directory for log files and results.
+                                   if (!dir.exists('data')) dir.create('data')
                                    # Debugging.
                                    if (R.version$major < 3 || (R.version$major == 3 & R.version$minor < 3)) {
                                      warning("R version too old; please load version 3.3.0 or higher.")

@@ -67,11 +67,24 @@ ModelObj <- R6Class("ModelObj",
                                             use_neg_ctrl=T,
                                             test_samples = NA,
                                             stepSize=10) {
+                        # Create log file for info, warnings, and errors.
+                        if (!dir.exists('data')) dir.create('data')
+                        tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
+                        log_file <- file(file.path('data',paste0('ACE_ModelObj_log_', tStamp)),
+                                         open='w+')
+                        write_log <- function(message_vector) {
+                          if (is.atomic(message_vector)) {
+                            cat(message_vector,'\n', file=log_file, append=T)
+                          } else {
+                            write.table(message_vector, file = log_file, append=T)
+                          }
+                        }
+                        
                         if (!is.environment(user_DataObj)) {
-                          print('initialize DataObj with:')
-                          cat("ModelObj$new(user_DataObj, use_master_library=T,",
-                              "fit_guide_parameter=F, mean_var_model=1, use_neg_ctrl=T,
-                                          test_samples = NA)")
+                          message('initialize DataObj with:\n',
+                                  "ModelObj$new(user_DataObj, use_master_library=T, ",
+                                  "fit_guide_parameter=F, mean_var_model=1, use_neg_ctrl=T, ",
+                                  "test_samples = NA)")
                           return()
                         }
 
@@ -79,7 +92,7 @@ ModelObj <- R6Class("ModelObj",
                         # normalize init_counts by method of means (median of ratio of counts/mean)
                         user_mean_var_model <- mean_var_model
                         if (!is.data.table(user_DataObj$init_counts)) {
-                          print("using depletion counts only")
+                          write_log('Using masterlibrary and depletion counts.')
                           use_counts <- user_DataObj$dep_counts
                         } else {
                           use_counts <- user_DataObj$init_counts
@@ -89,27 +102,28 @@ ModelObj <- R6Class("ModelObj",
                           self$mean_var_model_params <- getMeanVarFit0(use_counts)
                         } else if (user_mean_var_model == 1 || length(grep(user_mean_var_model, "Poisson",
                                                                            ignore.case=T))) {
-                          print("Using poisson distribution for sequencing noise.")
+                          write_log("Using poisson distribution for sequencing noise.")
                           self$mean_var_model <- 1L
                           self$mean_var_model_params <- list(0, 0)
                         } else if (user_mean_var_model == 2 || length(grep(user_mean_var_model,
                                                                            "trend",
                                                                            ignore.case=T))) {
-                          print("using glm fit mean~var model for NB distribution.")
+                          write_log("Using glm fit mean~var model for NB distribution.")
                           self$mean_var_model <- 2L
                           self$mean_var_model_params <- getMeanVarFit2(use_counts)
                         } else if (user_mean_var_model == 3 || length(grep(user_mean_var_model,
                                                                            c("ribodiff", "bayes","NB"),
                                                                            ignore.case))) {
-                          print("using arg max mean~var fit model for NB distribution.")
+                          write_log("Using arg max mean~var fit model for NB distribution.")
                           self$mean_var_model <- 3L
                           self$mean_var_model_params <- getMeanVarFit3(use_counts)
                         } else if (user_mean_var_model == 4 || length(grep(user_mean_var_model, "DESEQ",
                                                                            ignore.case=T))) {
-                          print("using DESEQ's variance model.")
+                          write_log("Using DESEQ's variance model.")
                           self$mean_var_model <- 4L
                           self$mean_var_model_params <- getMeanVarFit4(use_counts)
                         } else {
+                          write_log('ERROR: invalid mean~var model specified.')
                           stop("Invalid mean~var model specified.")
                         }
 
@@ -117,13 +131,18 @@ ModelObj <- R6Class("ModelObj",
                         # assuming a binary efficiency (either always or never cutting)  model,
                         # dep_guides = essentiality * frac_eff * init_guides + (1-frac_eff) * init_guides
                         if (fit_guide_parameter & is.data.table(user_DataObj$guide_covar)) {
-                          print("using the following features to fit guide efficiency:")
                           self$guide_covar <- sapply(user_DataObj$guide_covars$sequence,
                                                      function(x) str_count(x, '[GCgc]')/str_length(x))
                           if (length(unique(self$guide_covar)) < 2) {
-                            print("all guides have identical covariates; unable to fit guide parameter.")
+                            message("all guides have identical covariates; unable to fit guide parameter.")
+                            write_log("all guides have identical covariates; unable to fit guide parameter.")
                             self$guide_covar <- rep(1, nrow(user_DataObj$guide_covars))
                           }
+                          message("Using the following features to fit guide efficiency:",
+                                  unique(self$guide_covar))
+                          write_log("Using the following features to fit guide efficiency:",
+                                  unique(self$guide_covar))
+                          
                         } else {
                           self$guide_covar <- rep(1, nrow(use_counts))
                         }
@@ -135,44 +154,57 @@ ModelObj <- R6Class("ModelObj",
                         maxCells <- min(100*user_DataObj$cells_infected[[1]]/nrow(use_counts),
                                         round(0.1 * user_DataObj$cells_infected[[1]]))
                         self$unobserved_infected_cell_values <- seq(stepSize, maxCells, stepSize)
-                        cat('Summation performed over vector of length ',
-                            length(self$unobserved_infected_cell_values), '\n')
+                        message('Summation performed over vector of length ',
+                                length(self$unobserved_infected_cell_values), '\n')
+                        write_log(c('Summation performed over vector of length ',
+                                length(self$unobserved_infected_cell_values), '\n'))
 
                         # get vector of 'test' columns for convenience.
                         # using keywords in second column of sample annotation file.
                         if (is.na(test_samples) || !is.data.table(user_DataObj$sample_annotations)) {
-                          print("Not calculating differential depletion by sample subtype.")
+                          message("Not calculating differential depletion by sample subtype.")
+                          write_log("Not calculating differential depletion by sample subtype.")
                         } else {
-                          if (length(test_samples) > 1) cat('One testing group per model;',
+                          if (length(test_samples) > 1) {
+                            message('One testing group per model;',
                                                             'using first listed feature only.\n')
-                          print("extracting sample subtype:")
-                          print(test_samples[1])
+                            write_log('One testing group per model;',
+                                                            'using first listed feature only.\n')
+                          }
+                          message(c("extracting sample subtype:", test_samples[1]))
+                          write_log(c("extracting sample subtype:", test_samples[1]))
+                          
                           test_sample_rows <- grep(test_samples[1],
                                                    user_DataObj$sample_annotations$sample_subtype)
                           test_sample_names <- user_DataObj$sample_annotations$sample_name[test_sample_rows]
-                          print("test samples in sample annotations file:")
-                          print(test_sample_names)
+                          write_log("test samples in sample annotations file:")
+                          write_log(test_sample_names)
 
                           # get list of test samples; must correspond
                           # to sample_masterlib listings, which are
                           # depleted sample names.
-                          getSampleIdx <- function(sample) {
-                            ifelse(sample %in% names(user_DataObj$dep_counts),
-                                   grep(sample, names(user_DataObj$dep_counts)),
-                                   grep(sample, names(user_DataObj$init_counts)))
+                          getSampleIdx <- function(sampleName) {
+                            ifelse(sampleName %in% names(user_DataObj$dep_counts),
+                                   grep(sampleName, names(user_DataObj$dep_counts)),
+                                   grep(sampleName, names(user_DataObj$init_counts)))
                           }
                           anno_sample_idx <- sapply(test_sample_names, getSampleIdx)
                           test_sample_idx <- unique(anno_sample_idx[!is.na(anno_sample_idx)])
 
                           if (length(test_sample_idx)==0) {
-                            print("No samples matching the test subtype found in count data;
-                                              no differential essentiality calculated.")
+                            message("No samples matching the test subtype found in count data;",
+                                              "no differential essentiality will be calculated.")
+                            write_log(c("No samples matching the test subtype found in count data;",
+                                              "no differential essentiality calculated."))
                           } else if (length(test_sample_idx)==ncol(user_DataObj$dep_counts)) {
-                            print('All samples in count data match the test subtype; no differential essentiality calculated.')
+                            message('All samples in count data match the test subtype; no differential essentiality calculated.')
+                            write_log('All samples in count data match the test subtype; no differential essentiality calculated.')
                           } else {
                             self$test_sample_subtype_cols <- test_sample_idx
-                            print("Using the following samples as our test set:")
-                            print(self$test_sample_subtype_cols)
+                            message("Using the following samples as our test set:")
+                            message(names(user_DataObj$dep_counts)[self$test_sample_subtype_cols])
+                            write_log("Using the following samples as our test set:")
+                            write_log(names(user_DataObj$dep_counts)[self$test_sample_subtype_cols])
                           }
                         }
 
@@ -186,13 +218,13 @@ ModelObj <- R6Class("ModelObj",
                         # vector of frequencies.
                         # when calling multiple samples, entire table must be passed.
                         if (is.data.table(user_DataObj$master_counts[[1]]) & use_master_library) {
-                          print("using master library in cells infected prior")
+                          write_log("Using master library for 'cells infected' prior calculation")
                           # get data.table of sgrna frequencies averaged across masterlibs.
                           master_freq_dt <- getMasterLib(countList = user_DataObj$master_counts)
                           self$master_freq_dt <- master_freq_dt
                           self$guidePrior <- 'master_library'
                         } else if (is.data.table(user_DataObj$init_counts)) {
-                          print("calculated median abundance prior for cells infected.")
+                          write_log("Using median abundance prior for cells infected.")
                           # assume no counts are depleted in the initial population.
                           guideMeans <- user_DataObj$init_counts[, exp(rowMeans(log(.SD+0.5)))]
                           normCounts <- user_DataObj$init_counts[,(0.5+.SD)/
@@ -206,7 +238,7 @@ ModelObj <- R6Class("ModelObj",
                           setkey(self$master_freq_dt, sgrna)
                           self$guidePrior <- 'mean_initial'
                         } else {
-                          print('Using uniform prior for cells infected.')
+                          write_log('Using uniform prior for cells infected.')
                           self$master_freq_dt <- NA
                           self$guidePrior <- 'uniform_cells'
                         }
@@ -218,8 +250,8 @@ ModelObj <- R6Class("ModelObj",
                           # keep only controls with a LFC within 1 standard deviation of the median.
                           neg_ctrls <- fread(user_DataObj$neg_control_file, header =F,
                                              sep = '')[[1]]
-                          print('treating negative control file as single column.')
-                          print(head(neg_ctrls))
+                          write_log('treating negative control file as single column.')
+                          write_log(head(neg_ctrls))
                           avgNeg <- getLfcDt(user_DataObj = user_DataObj,
                                              master_freq_dt = self$master_freq_dt,
                                              getCI=F,
@@ -231,7 +263,8 @@ ModelObj <- R6Class("ModelObj",
                           self$neg_ctrls <- unique(useNeg)
 
                         } else {
-                          print('No negative controls will be used; no file in DataObj.')
+                          message('No negative controls will be used.')
+                          write_log('No negative controls will be used.')
                           self$use_neg_ctrl <- F
                           self$neg_ctrls <- NA
                         }
@@ -241,7 +274,8 @@ ModelObj <- R6Class("ModelObj",
                                                               self$master_freq_dt,
                                                               use_master_library,
                                                               self$use_neg_ctrl,
-                                                              neg_ctrls = self$neg_ctrls)
+                                                              neg_ctrls = self$neg_ctrls,
+                                                              write_log)
                         self$init_scaling <- sample_scaling$init_scaling
                         self$dep_scaling <- sample_scaling$dep_scaling
 
@@ -252,6 +286,8 @@ ModelObj <- R6Class("ModelObj",
                           print(max(user_DataObj$cells_infected))
                           print("guides infected:")
                           print(nrow(use_counts))
+                          write_log(c('ERROR: "Not enough cells per guide;",
+                                   "must infect at least 1/100 cells per guide in at least one sample\n'))
                           stop(cat("Not enough cells per guide;",
                                    "must have at least 1/100 cells per guide in at least one sample\n"))
                         }
@@ -262,12 +298,13 @@ ModelObj <- R6Class("ModelObj",
                         if (any(sapply(c(self$mean_var_model_params, self$guide_covar,
                                          self$unobserved_infected_cell_values, self$mean_var_model),
                                        function(i) any(is.na(unlist(i)))))) {
-                          print("NA's generated in model object in:")
-                          if (any(is.na(self$mean_var_model))) print("mean_var_model")
-                          if (any(is.na(self$mean_var_model_params))) print("mean_var_Model_params")
-                          if (any(is.na(self$guide_covar))) print("guide_covar")
-                          stop("error in ModelObjClass; inappropriate NA's found in data.")
+                          write_log("ERROR: NA's generated in model object in:")
+                          if (any(is.na(self$mean_var_model))) write_log("mean_var_model")
+                          if (any(is.na(self$mean_var_model_params))) write_log("mean_var_Model_params")
+                          if (any(is.na(self$guide_covar))) write_log("guide_covar")
+                          stop("Error in ModelObjClass; inappropriate NA's found in data.")
                         }
+                        close(log_file)
                       }
                     )
 )

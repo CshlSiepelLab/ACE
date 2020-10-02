@@ -1,0 +1,13 @@
+sample_name sample_subtype
+init_Sample_1 test
+dep_Sample_1 test
+init_Sample_2 test
+dep_Sample_2 test
+init_Sample_3 test
+dep_Sample_3 test
+init_Sample_1 ctrl
+dep_Sample_1 ctrl
+init_Sample_2 ctrl
+dep_Sample_2 ctrl
+init_Sample_3 ctrl
+dep_Sample_3 ctrl

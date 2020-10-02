@@ -29,4 +29,8 @@ Collate:
     'optimizeModelParameters.R'
     'removeNullData.R'
     'writeResObj.R'
-Suggests: testthat
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
