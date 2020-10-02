@@ -141,7 +141,7 @@ deriveSampleScaling <- function(user_DataObj,
     message('Excess of guides seem depleted; recommend using negative controls.')
     message('Using controls?: ', use_neg_ctrl, "\n")
     write_log('Excess of guides seem depleted; recommend using negative controls.')
-    write_log('Using controls?: ', use_neg_ctrl, "\n")
+    write_log(c('Using controls?: ', use_neg_ctrl, "\n"))
   }
 
   return(list('init_scaling'=init_scaling, 'dep_scaling'=dep_scaling))

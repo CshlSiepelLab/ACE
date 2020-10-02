@@ -19,7 +19,8 @@ deriveSampleScaling(
   master_freq_dt,
   use_master_library,
   use_neg_ctrl,
-  neg_ctrls
+  neg_ctrls,
+  write_log
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ deriveSampleScaling(
 \item{use_neg_ctrl}{Boolean}
 
 \item{neg_ctrls}{Vector of gene name strings.}
+
+\item{write_log}{Function to write messages to log.}
 }
 \description{
 Function deriveSampleScaling
