@@ -70,7 +70,7 @@ annotations to use in test partitioning (for instance, 'KRAS_WT' vs. 'KRAS_Mut')
 
 ```{r setup}
 # remove post-development.
-devtools::load_all('~/siepel/ACER', export_all = F)
+#devtools::load_all('~/siepel/ACER', export_all = F)
 library(ACER)
 ```
 
