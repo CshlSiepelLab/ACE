@@ -32,5 +32,6 @@ Collate:
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    pinp
 VignetteBuilder: knitr
