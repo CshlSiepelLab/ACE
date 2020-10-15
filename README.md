@@ -25,8 +25,8 @@ To determine differential essentiality, run the following commands (shown with e
 
 ``` r
 library(ACER)
-newDataObj <- DataObj$new(masterFiles = system.file('extdata','masterLibrarySeq.tsv', package='ACER'),
-                          countFile = system.file('extdata','countData.tsv', package='ACER'),
+newDataObj <- DataObj$new(masterFiles = system.file('extdata','masterLibraryCounts.csv', package='ACER'),
+                          countFile = system.file('extdata','countData.csv', package='ACER'),
                           negCtrlFile = system.file('extdata','negCtrlGenes.txt', package='ACER'), 
                           sampleInfoFile=system.file('extdata','sampleAnnotations.txt', package='ACER'),
                           hasInitSeq = T)
