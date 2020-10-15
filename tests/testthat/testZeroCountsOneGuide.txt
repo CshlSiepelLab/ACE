@@ -1,2 +1,0 @@
-"guide" "gene" "dep_1" "dep_2"
-"g1" "gene1" 0 0

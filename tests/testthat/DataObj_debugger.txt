@@ -1,9 +1,0 @@
-[1] "submitted master data files are:"
-[1] "testMasterOne.txt"
-[1] "If duplicate guides found, first instance used."
-   sample     masterlib
-1:  dep_1 testMasterOne
-[1] "dep_1"
-using samples:  dep_1[1] "Not calculating guide efficiency. No covariate file."
-[1] "Using these columns as sgrna and gene labels."
-[1] "guide" "gene" 

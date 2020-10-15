@@ -1,6 +1,36 @@
 context('Test Model Object')
 library(ACER)
 
+setup({
+  write.table(data.table('guide' = paste0('g', 1:3),
+                         'gene' = 'gene1',
+                         'init_1' = c(0,1,1),
+                         'dep_1' = c(0,2,3)), row.names = F,
+              file = 'testCountOne.txt')
+  write.table(data.table('sgrna' = paste0('g', 1:3),
+                         'count' = c(0,300,300)),
+              file = 'testMasterOne.txt', row.names = F)
+  write.table(data.table('guide' = paste0('g', 1),
+                         'gene' = c('gene1'),
+                         'dep_1' = c(0),
+                         'dep_2' = c(0)),
+              row.names = F,
+              file = 'testZeroCountsOneGuide.txt')
+  write.table(data.table('sgrna' = paste0('g', 1:3),
+                         'count' = c(200,300,300)),
+              file = 'testMaster.txt', row.names = F)
+})
+
+teardown({
+  file.remove('testCountOne.txt', 'testMasterOne.txt',
+              'testZeroCountsOneGuide.txt',
+              'testMaster.txt')
+  file.remove(sapply(dir('ACE_output_data'),function(f) {
+    file.path('ACE_output_data', f)}), 'ACE_output_data')
+  file.remove('ModelObj_debugger.txt')
+  file.remove('getMasterLib_debugger.txt')
+})
+
 test_that('Master library replicate handling in getMasterLib.', {
   testMasterCountList <- list('masterA' = data.table('sgrna'=paste0('g', 1:1e4),
                                                      'rep1' = rep(0:9, 1e3)) ,
@@ -9,9 +39,19 @@ test_that('Master library replicate handling in getMasterLib.', {
                                                      'repli2' = (1+2e4):3e4),
                               'masterC' = data.table('sgrna' = paste0('g', 1:1e3),
                                                      'rep1' = rep(0, 1e3)))
-  print(head(testMasterCountList[[1]]))
-  capture.output(testMasterFreq <- getMasterLib(countList = testMasterCountList),
-                 file = 'getMasterLib_debugger.txt')
+  log_file <- file('getMasterLib_debugger.txt', open = 'w+')
+  on.exit(close(log_file))
+  testLog <- function(message_vector) {
+    if (is.atomic(message_vector)) {
+      cat(message_vector,'\n', file=log_file, append=T)
+    } else {
+      suppressWarnings(write.table(message_vector, file = log_file, 
+                                   col.names=T, append=T))
+    }
+  }
+  testLog(head(testMasterCountList[[1]]))
+  testMasterFreq <- getMasterLib(countList = testMasterCountList, 
+                                                testLog)
   noInfValuesInMasterFreq <- !testMasterFreq[, any(sapply(.SD, is.infinite)),
                                              .SDcols = -'sgrna']
   expect_true(noInfValuesInMasterFreq)
@@ -22,21 +62,9 @@ test_that('Master library replicate handling in getMasterLib.', {
 })
 
 test_that('ModelObj with blank guides has problem.', {
-  if (!'testCountOne.txt' %in% dir()) {
-    write.table(data.table('guide' = paste0('g', 1:3),
-                           'gene' = 'gene1',
-                           'init_1' = c(0,1,1),
-                           'dep_1' = c(0,2,3)), row.names = F,
-                file = 'testCountOne.txt')
-  }
-  if (!'testMasterOne.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'count' = c(0,300,300)),
-                file = 'testMasterOne.txt', row.names = F)
-  }
-  capture.output(testDataObjAll <- suppressWarnings(DataObj$new(masterFiles = c('testMasterOne.txt'),
-                                                                countFile = 'testCountOne.txt')),
-                 file = 'DataObj_debugger.txt')
+
+  testDataObjAll <- suppressWarnings(DataObj$new(masterFiles = c('testMasterOne.txt'),
+                                                                countFile = 'testCountOne.txt'))
   # test resulting DataObj functional.
   capture.output(testModelObj <- ModelObj$new(testDataObjAll),
                  file = 'ModelObj_debugger.txt')
@@ -55,19 +83,7 @@ test_that('ModelObj with blank guides has problem.', {
 })
 
 test_that('1 guide, 0 counts, dep read counts only should give DataObj warning then ModelObj error.', {
-  if (!'testZeroCountsOneGuide.txt' %in% dir()) {
-    write.table(data.table('guide' = paste0('g', 1),
-                           'gene' = c('gene1'),
-                           'dep_1' = c(0),
-                           'dep_2' = c(0)),
-                row.names = F,
-                file = 'testZeroCountsOneGuide.txt')
-  }
-  if (!'testMaster.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'count' = c(200,300,300)),
-                file = 'testMaster.txt', row.names = F)
-  }
+
   expect_warning(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt'),
                                             countFile = 'testZeroCountsOneGuide.txt',
                                             hasInitSeq = F),

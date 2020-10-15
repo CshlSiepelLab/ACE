@@ -79,8 +79,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
                                                                                      user_DataObj = user_DataObj,
                                                                                      user_ModelObj = user_ModelObj))
         if (gene_idx == 1) {
-          write(optimOut, file = file.path('data',paste0(tStamp, 'sample_optim_output.txt')))
-          write(nullOut,  file = file.path('data',paste0(tStamp, 'sample_null_output.txt')))
+          write(optimOut, file = file.path('ACE_output_data',paste0(tStamp, 'sample_optim_output.txt')))
+          write(nullOut,  file = file.path('ACE_output_data',paste0(tStamp, 'sample_null_output.txt')))
         }
       }
       print("finished optimizing one subset:")
@@ -93,7 +93,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
   # -------------------------------- Main Method -------------------------------------
 
   # Initialize
-  if (!dir.exists('data')) dir.create('data')
+  if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
   geneList <- unique(user_DataObj$guide2gene_map$gene)
   numGenes <- length(geneList)
   if (is.list(subset_genes)) {

@@ -4,11 +4,13 @@
 \alias{getMasterLib}
 \title{Function getMasterLib}
 \usage{
-getMasterLib(countList)
+getMasterLib(countList, write_log)
 }
 \arguments{
 \item{countList}{List of data.tables with counts of sequenced masterlibraries.
-One masterlibrary per data.table; all replicates within one data.table.}
+One masterlibrary per data.table; all sequencing replicates within one data.table.}
+
+\item{write_log}{Function to output messages to log file.}
 }
 \value{
 Data.table with sgrna x masterlibs of log frequencies.
@@ -17,6 +19,6 @@ Data.table with sgrna x masterlibs of log frequencies.
 Process list of master libraries, which may be single or multiple files,
 which may have one or more replicates.
 Currently just averaging over total-count-normalized replicates.
-return data.table of sgRNA x masterlibraries, with column names corresponding
+Returns data.table of sgRNA x masterlibraries, with column names corresponding
 to those referenced in sample_masterlib.
 }

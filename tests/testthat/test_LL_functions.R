@@ -1,5 +1,32 @@
 context("Parameter Optimization")
 library(ACER)
+setup({
+  write.table(data.table('guide' = paste0('g', 1),
+                         'gene' = c('gene1'),
+                         'dep_1' = c(0),
+                         'dep_2' = c(0)),
+              row.names = F,
+              file = 'testZeroCountsOneGuide.txt')
+  write.table(data.table('guide' = paste0('g', 1:3),
+                         'gene' = 'gene1',
+                         'dep_1' = c(0,2,3),
+                         'dep_2' = c(0,4,5)),
+              row.names = F,
+              file = 'testZeroCountsInOne.txt')
+  write.table(data.table('sgrna' = paste0('g', 1:3),
+                         'count' = c(200,300,300)),
+              file = 'testMaster.txt', row.names = F)
+  write.table(data.table('sgrna' = paste0('g', 1:3),
+                         'count' = c(2000,3000,3000)),
+              file = 'testMaster2.txt', row.names = F)
+})
+teardown({
+  file.remove('testZeroCountsOneGuide.txt', 'testZeroCountsInOne.txt',
+              'testMaster.txt', 'testMaster2.txt')
+  file.remove(sapply(dir('ACE_output_data'),function(f) {
+    file.path('ACE_output_data', f)}), 'ACE_output_data')
+  file.remove('getMasterLib_debugger.txt')
+})
 
 # For testing external function interfaces.
 test_that("get_pois_muVec returns same results as R::dpois", {
@@ -28,19 +55,7 @@ test_that('Call getLLNoInit with zero counts in all depleted samples', {
 })
 
 test_that('0 counts in depleted samples, no init, passed to getLLNoInit', {
-  if (!'testZeroCountsInOne.txt' %in% dir()) {
-    write.table(data.table('guide' = paste0('g', 1:3),
-                           'gene' = 'gene1',
-                           'dep_1' = c(0,2,3),
-                           'dep_2' = c(0,4,5)),
-                row.names = F,
-                file = 'testZeroCountsInOne.txt')
-  }
-  if (!'testMaster.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'count' = c(200,300,300)),
-                file = 'testMaster.txt', row.names = F)
-  }
+
   testDataObj <- DataObj$new(masterFiles = c('testMaster.txt'),
                              countFile = 'testZeroCountsInOne.txt',
                              hasInitSeq = F)
@@ -48,30 +63,12 @@ test_that('0 counts in depleted samples, no init, passed to getLLNoInit', {
   testModelObj <- ModelObj$new(testDataObj)
   expect_output(testResObj <- optimizeModelParameters(testDataObj,
                                         testModelObj))
-  # write.table(testResObj$gene_results, file = 'getLLNoInit_debugger.txt')
   expect_false(is.na(testResObj$gene_results$fit_gene_param))
 
 })
 
 test_that('Multiple masterlibraries can be included without init seq.', {
-  if (!'testZeroCountsInOne.txt' %in% dir()) {
-    write.table(data.table('guide' = paste0('g', 1:3),
-                           'gene' = 'gene1',
-                           'dep_1' = c(0,2,3),
-                           'dep_2' = c(0,4,5)),
-                row.names = F,
-                file = 'testZeroCountsInOne.txt')
-  }
-  if (!'testMaster.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'count' = c(200,300,300)),
-                file = 'testMaster.txt', row.names = F)
-  }
-  if (!'testMaster2.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'count' = c(2000,3000,3000)),
-                file = 'testMaster2.txt', row.names = F)
-  }
+
 
   expect_output(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt',
                                                            'testMaster2.txt'),
@@ -81,20 +78,6 @@ test_that('Multiple masterlibraries can be included without init seq.', {
 
 # what happens when you try to optimize with 0 counts?
 test_that('Require counts in some guides in depleted samples if no init seq.', {
-  if (!'testZeroCountsOneGuide.txt' %in% dir()) {
-    write.table(data.table('guide' = paste0('g', 1),
-                           'gene' = c('gene1'),
-                           'dep_1' = c(0),
-                           'dep_2' = c(0)),
-                row.names = F,
-                file = 'testZeroCountsOneGuide.txt')
-  }
-  if (!'testMaster.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'masterlib1' = c(200, 300, 300),
-                           'masterlib2' = c(0, 2, 2)),
-                file = 'testMaster.txt', row.names = F)
-  }
   expect_warning(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt'),
                                             countFile = 'testZeroCountsOneGuide.txt',
                                             hasInitSeq = F),
@@ -105,24 +88,12 @@ test_that('Require counts in some guides in depleted samples if no init seq.', {
 
 # optim() calls values outside of the parameter bounds during gradient estimation.
 test_that('Negative and positive ess values should not be accepted by callGetLLByGene.', {
-  if (!'testZeroCountsInOne.txt' %in% dir()) {
-    write.table(data.table('guide' = paste0('g', 1:3),
-                           'gene' = 'gene1',
-                           'dep_1' = c(0,2,3),
-                           'dep_2' = c(0,4,5)),
-                row.names = F,
-                file = 'testZeroCountsInOne.txt')
-  }
-  if (!'testMaster.txt' %in% dir()) {
-    write.table(data.table('sgrna' = paste0('g', 1:3),
-                           'count' = c(200,300,300)),
-                file = 'testMaster.txt', row.names = F)
-  }
+
   # no warnings if no counts just in depleted sample.
   expect_output(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt'),
                                             countFile = 'testZeroCountsInOne.txt',
                                             hasInitSeq = F))
-  expect_output(testModelObj <- ModelObj$new(testDataObj))
+  testModelObj <- ModelObj$new(testDataObj)
   baseParams <- list(useGene = 'gene1',
                      useSamples = 1,
                      sample_effects = 1,

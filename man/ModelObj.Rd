@@ -70,6 +70,8 @@ specifications.  Computes sample scaling parameters, the vector of infected
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create ModelObj
+ Write messages and warnings to log file.
+ @param message_vector String or table to write.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModelObj$new(
   user_DataObj = NA,

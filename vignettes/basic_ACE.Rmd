@@ -11,13 +11,14 @@ address:
 lead_author_surname: Hutton
 doi: "https://github.com/CshlSiepelLab/ACE"
 output: 
-  #rmarkdown::html_vignette
-  pinp::pinp:
-    collapse: true
+  pinp::pinp
+  
+keep_tex: false
 vignette: >
   %\VignetteIndexEntry{ACER: Analysis of CRISPR Essentaility in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignettePackage{ACER}
   
 acknowledgements: |
   This tool was designed in collaboration with Prof. Adam Siepel and Prof. 
@@ -69,8 +70,6 @@ annotations to use in test partitioning (for instance, 'KRAS_WT' vs. 'KRAS_Mut')
 * `guideCovarFile`: File used to estimate guide efficiency (optional).
 
 ```{r setup}
-# remove post-development.
-#devtools::load_all('~/siepel/ACER', export_all = F)
 library(ACER)
 ```
 
@@ -86,7 +85,7 @@ forming a `ModelObj`.  Both the raw data and the estimated parameters are then
 provided to the main function, `optimizeModelParameters`, which uses expectation
 maximization to infer gene essentiality, guide efficiency, and sample effects.
 ```{r basic}
-newDataObj <- DataObj$new(masterFiles = system.file('extdata','masterLibrarySeq.tsv', package='ACER'),
+newDataObj <- DataObj$new(masterFiles = system.file('extdata','masterLibraryCounts.csv', package='ACER'),
                           countFile = system.file('extdata','countData.tsv', package='ACER'),
                           negCtrlFile = system.file('extdata','negCtrlGenes.txt', package='ACER'), 
                           sampleInfoFile=system.file('extdata','sampleAnnotations.txt', package='ACER'),
@@ -94,7 +93,7 @@ newDataObj <- DataObj$new(masterFiles = system.file('extdata','masterLibrarySeq.
 newModelObj <- ModelObj$new(user_DataObj = newDataObj,
                             use_neg_ctrl=T,
                             test_samples='test',
-                            use_master_library = F)
+                            use_master_library = T)
 newResultsObj <- optimizeModelParameters(user_DataObj = newDataObj,
                                          user_ModelObj = newModelObj)
 writeResObj(newResultsObj)

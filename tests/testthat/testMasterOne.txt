@@ -1,4 +1,0 @@
-sgrna count
-g1 0
-g2 300
-g3 300

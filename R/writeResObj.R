@@ -10,17 +10,18 @@ writeResObj <- function(user_ResObj) {
   message(objName)
   tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
   v<- tStamp
-  save(objName, file = file.path('data',paste0(objName, '_v', v)))
+  if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
+  save(objName, file = file.path('ACE_output_data',paste0(objName, '_v', v)))
   write.table(user_ResObj$gene_results,
-              file = file.path('data',paste0(objName, "_", v, '_gene_results.txt')),
+              file = file.path('ACE_output_data',paste0(objName, "_", v, '_gene_results.txt')),
               row.names = F, quote = F)
   write.table(user_ResObj$diff_genes,
-              file= file.path('data',paste0(objName, "_", v, '_diff_genes.txt')),
+              file= file.path('ACE_output_data',paste0(objName, "_", v, '_diff_genes.txt')),
               row.names = F, quote = F)
   write(paste0(timestamp(),'\nREADME\n',user_ResObj$readMe),
-        file = file.path('data',paste0(objName, "_", v, '_readMe.txt')))
+        file = file.path('ACE_output_data',paste0(objName, "_", v, '_readMe.txt')))
   message(paste0(objName, ' written'))
-  return(list('gene_results'=file.path('data', paste0(objName, "_", v, '_gene_results.txt')),
-              'diff_genes' = file.path('data', paste0(objName, "_", v, '_diff_genes.txt')),
-              'readMe' = file.path('data',paste0(objName, "_", v, '_readMe.txt'))))
+  return(list('gene_results'=file.path('ACE_output_data', paste0(objName, "_", v, '_gene_results.txt')),
+              'diff_genes' = file.path('ACE_output_data', paste0(objName, "_", v, '_diff_genes.txt')),
+              'readMe' = file.path('ACE_output_data',paste0(objName, "_", v, '_readMe.txt'))))
 }

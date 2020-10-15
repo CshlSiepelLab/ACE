@@ -43,13 +43,6 @@ deriveSampleScaling <- function(user_DataObj,
       masterlib <- master_freq_dt[user_DataObj$guide2gene_map$sgrna,
                                   ][[useMasterlib]]
       base_counts[[i]] <- masterlib[useGuides]
-      ### TODO - debug for test case ####
-      ### masterlibv is NA.
-      
-      write_log('masterlib')
-      write_log(head(masterlib))
-      write_log('useMasterlib')
-      write_log(useMasterlib)
     }
     matchedMlibDT <- as.data.table(lapply(names(user_DataObj$dep_counts),
                                           function(i) {

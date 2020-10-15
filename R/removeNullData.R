@@ -94,7 +94,7 @@ removeNullData <- function(user_DataObj) {
   if (!isFALSE(removeGuides)) {
     warning('Some guides have no counts in any depleted samples or masterlib, removing.')
     tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
-    write.table(removeGuides, file = file.path('data',paste0(tStamp,'no_count_guides.txt')))
+    write.table(removeGuides, file = file.path('ACE_output_data',paste0(tStamp,'no_count_guides.txt')))
     if (length(removeGuides) == nrow(user_DataObj$dep_counts)) {
       stop('No valid data submitted.')
     }

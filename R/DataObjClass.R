@@ -74,7 +74,7 @@ DataObj <- R6Class("DataObj",
                                                        useSamples = NA) {
 
                                    # Create directory for log files and results.
-                                   if (!dir.exists('data')) dir.create('data')
+                                   if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
                                    # Debugging.
                                    if (R.version$major < 3 || (R.version$major == 3 & R.version$minor < 3)) {
                                      warning("R version too old; please load version 3.3.0 or higher.")
@@ -121,7 +121,7 @@ DataObj <- R6Class("DataObj",
                                              'total are:'))
                                      print(sum(duplicated(dupRawData[[1]])))
                                      write.table(dupRawData[duplicated(dupRawData[[1]]),],
-                                                 file = 'dup_guides.txt',
+                                                 file = file.path('ACE_output_data','dup_guides.txt'),
                                                  quote = F)
                                      rawData <- unique(dupRawData, by = 1)
                                    } else {
@@ -137,7 +137,7 @@ DataObj <- R6Class("DataObj",
                                                          .SDcols = -(1:2)],
                                                  quote = F,
                                                  row.names = F,
-                                                 file = 'data_debug.txt')
+                                                 file = file.path('ACE_output_data','data_debug.txt'),)
                                      stop("non-numeric and not-NA data in raw count file.")
                                    }
                                    # split into initial & dep counts if applicable.
@@ -168,7 +168,7 @@ DataObj <- R6Class("DataObj",
                                    }
                                    if (any(is.na(masterFiles))) {
                                      master_counts <- NA
-                                     print("No list of master library files included.")
+                                     print("Invalid master library files included.")
                                    } else {
                                      print("submitted master data files are:")
                                      print(masterFiles)
@@ -185,10 +185,12 @@ DataObj <- R6Class("DataObj",
                                      names(master_counts) <- sapply(mf_names,
                                                                     function(i) strsplit(i[length(i)], '[.]')[[1]][1])
                                      mf_illegal <- sapply(master_counts, function(i) {
-                                       !all(sapply(i[, -1, with=F], is.numeric)) })
+                                       !all(sapply(i[, -1, with=F], is.numeric))  |
+                                         any(sapply(i[, -1, with=F], function(j) j < 0)) 
+                                       })
                                      if (any(mf_illegal)) {
                                        print(lapply(master_counts[mf_illegal], head))
-                                       print("Non-numeric in masterlibrary counts!")
+                                       print("Invalid count data in masterlibrary counts!")
                                        stop("masterFile must have form [sgrna, count1, count2..]")
                                      }
                                    }
