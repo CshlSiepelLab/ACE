@@ -34,8 +34,7 @@ getMasterLib <- function(countList, write_log) {
     write_log('averaged masterlib replicates for:')
     write_log(ml_name)
     write_log(head(mf_avg_dt))
-    write_log(head(countList))
-    write_log('countLIst names are:')
+    write_log('countList names are:')
     write_log(names(countList[[i]]))
     if (exists('master_freq')) master_freq <- merge(master_freq,
                                                     mf_avg_dt,

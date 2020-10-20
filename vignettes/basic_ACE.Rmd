@@ -72,10 +72,32 @@ annotations to use in test partitioning (for instance, 'KRAS_WT' vs. 'KRAS_Mut')
 ```{r setup}
 library(ACER)
 ```
+## Tool Applications
+ACE (Analysis of CRISPR Essentiality) was designed to test for differential essentiality
+between sets of samples from a CRISPR knockout screen. Please see the ACE paper
+for a detailed discussion of methods. [@Hutton2020]
+
+## Input Data
+A minimum of two data files must be provided for ACE: 
+`countFile`: a single text file with unique sgRNA identifiers in the first column and
+gene names in the second column.  Subsequent columns must contain either depleted read counts
+(if a master library sequencing is provided),
+or alternating initial and depleted read counts.
+`negCtrlFile`: a text file of the gene names to use as negative controls.
+
+Other files necessary for analysis may include:
+`masterFiles`: a vector of names of files containing sequenced master libraries.
+`sampleMasterInfoFile`: Text file containing a column of master library file names,
+and a column with the corresponding sample name derived from that master library
+(the same sample name used as a header in the `countFile`).
+`sampleInfoFile`: Required for differential essentiality prediction, this file
+contains one column listing sample names and a second column containing sample
+annotations to use in test partitioning (for instance, 'KRAS_WT' vs. 'KRAS_Mut').
+`guideCovarFile`: File used to estimate guide efficiency (optional).
 
 
 ```{r sample inputs}
-head(fread(system.file('extdata','countData.tsv', package='ACER')))
+head(fread(system.file('extdata','countData.csv', package='ACER')))
 ```
 ## Basic Analysis
 The basic workflow for using ACE is three commands.  First, all input data files

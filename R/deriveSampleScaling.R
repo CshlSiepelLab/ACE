@@ -102,6 +102,13 @@ deriveSampleScaling <- function(user_DataObj,
       write_log(user_DataObj$cells_infected[naIdx])
       write_log(c('base counts: ',
                   sapply(base_counts[naIdx], function(i) i[1:10])))
+      testExp <- names(user_DataObj$dep_counts)[[1]]
+      write_log('Sample base count calculation with:')
+      write_log(testExp)
+      write_log(c('useMasterLib: ', unlist(user_DataObj$sample_masterlib[sample==testExp,
+                                                                         masterlib])))
+      write_log(c('masterlib ', head(master_freq_dt[user_DataObj$guide2gene_map$sgrna,][[
+        useMasterlib]][useGuides])))
       stop('NA in init_scaling.')
     }
   } else init_scaling <- NA
