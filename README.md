@@ -5,11 +5,12 @@ bibliography: vignettes/ace.bib
 # ACER
 
 <!-- badges: start -->
+[![R build status](https://github.com/CshlSiepelLab/ACE/workflows/R-CMD-check/badge.svg)](https://github.com/CshlSiepelLab/ACE/actions)
 <!-- badges: end -->
 
 The goal of ACER is to test for differential essentiality
 between sets of samples from a CRISPR knockout screen [@Hutton2020].  See
-`vignettes(package=ACER)` for detailed examples.
+`vignettes(package=ACER)` for detailed discussion.
 
 ## Installation
 

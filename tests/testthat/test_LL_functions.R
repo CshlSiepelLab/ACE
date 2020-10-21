@@ -25,7 +25,6 @@ teardown({
               'testMaster.txt', 'testMaster2.txt')
   file.remove(sapply(dir('ACE_output_data'),function(f) {
     file.path('ACE_output_data', f)}), 'ACE_output_data')
-  file.remove('getMasterLib_debugger.txt')
 })
 
 # For testing external function interfaces.

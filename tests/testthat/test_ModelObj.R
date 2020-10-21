@@ -19,6 +19,10 @@ setup({
   write.table(data.table('sgrna' = paste0('g', 1:3),
                          'count' = c(200,300,300)),
               file = 'testMaster.txt', row.names = F)
+  write(x='Debugging Messages from processing master library input files.',
+        file = 'getMasterLib_debugger.txt')
+  write(x='Debugging Messages from ModelObj Class',
+        file = 'ModelObj_debugger.txt')
 })
 
 teardown({

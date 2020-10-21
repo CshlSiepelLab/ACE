@@ -32,6 +32,8 @@ setup({
                          'init2' = c(3,0,3),
                          'dep_2' = c(2,0,2)),
               file = 'test_DropSample.txt', row.names = F)
+  write(x='Debugging Messages from DataObj Class',
+        file = 'DataObj_debugger.txt')
 })
 
 teardown({
@@ -57,11 +59,14 @@ test_that('Blank guides should be removed from count data with a warning.', {
 
   warnAll <- capture_warnings(testDataObjAll <- DataObj$new(masterFiles = c('test_MasterOne.txt'),
                                               countFile = 'test_CountOne.txt'))
+  write(warnAll, file = 'DataObj_debugger.txt', append=T)
 
   warnMaster <- capture_warnings(testDataObjMaster <- DataObj$new(masterFiles = c('test_MasterOne.txt'),
                                                                   countFile = 'test_CountOneDep.txt',
                                                                   hasInitSeq = F))
+  write(warnMaster, file = 'DataObj_debugger.txt', append=T)
   warnInit <- capture_warnings(testDataObjInit <- DataObj$new(countFile = 'test_CountOne.txt'))
+  write(warnInit, file = 'DataObj_debugger.txt', append=T)
 
   expect_equal(2, nrow(testDataObjAll$dep_counts))
   expect_equal(2, nrow(testDataObjMaster$dep_counts))
