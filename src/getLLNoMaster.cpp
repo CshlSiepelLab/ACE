@@ -48,7 +48,6 @@ double getLLNoMaster(NumericVector gene_essentiality, NumericVector guide_effici
   double guide_effect, init_seq_count, dep_seq_count, q_max;
   int i = 0;
 
-  // eval L(f) = Poiss(nsg*λs; mg*τs)NB(xsg; nsg*λs)NB(ysg; nsg*λs*[(fg*eg)+(1-eg)])
   // extract & match relative vectors.
   for (int guide = 0; guide < guide_efficiency.length(); guide++) {
     for (int sample = 0; sample < sample_effects.length(); sample++) {

@@ -33,5 +33,6 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
-    pinp
+    pinp,
+    covr
 VignetteBuilder: knitr

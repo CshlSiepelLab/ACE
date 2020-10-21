@@ -51,7 +51,6 @@ double getLLNoInit(NumericVector gene_essentiality, NumericVector guide_efficien
   double guide_effect, infected_prior, dep_seq_count, q_max;
   int i = 0;
 
-  // eval L(f) = Poiss(nsg*λs; mg*τs)Poiss(xsg; nsg*λs)Poiss(ysg; nsg*λs*[(fg*eg)+(1-eg)])
   // extract & match relative vectors.
   for (int guide = 0; guide < guide_efficiency.length(); guide++) {
     for (int sample = 0; sample < sample_effects.length(); sample++) {

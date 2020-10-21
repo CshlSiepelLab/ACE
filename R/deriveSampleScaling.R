@@ -1,14 +1,21 @@
 #' Function deriveSampleScaling
-#' create init_scaling and dep_scaling (γ,γ').
+#' create init_scaling and dep_scaling. 
 #' Misspecification will cause our 'neutral' model to
 #' actually be depleted, reducing all essentiality scores.
-#' E(λ) = med(y/n) ~ sum(y)
-#' model 1a: (default) assume >50% φ_G = 1,
-#' and set γ'=med(y/(n_sg)); E(n_sg) = c_s m_g,
-#' the masterlib freq m_g * total infected cells c_s.
-#' model 1b: (no masterlib) set λ'=med(y_g/n);
-#' E(x_s) = median_g(x_sg/mean_s(x_g/sum(x))) * c_s
-#' mean_s(x_g/sum(x)) given in masterlibrary.
+#' The expected scaling factor is the ratio of read counts to their
+#' corresponding prior, with the median taken across sgrna in a sample.  
+#' This method assumes the median sgrna is nonessential.
+#' This is also approximated by the ratio of the total sample read counts
+#' to the total expected read counts.
+#' If indicated, the scaling factor will be calculated only using negative
+#' control sgrna (recommended).
+#' If the master library is used as the prior, the expected read count is
+#' the product of the master library sgrna frequency and the total number of
+#' infected cells.
+#' If the master library sgrna frequency is not used, the expected frequency for
+#'  each guide is determined by the 
+#' average percent abundance for that guide across all (mean-normalized) initial
+#' samples. 
 #' @param user_DataObj all data; a DataObj.
 #' @param master_freq_dt normalized masterlibrary frequencies (log)
 #' @param use_master_library Boolean
