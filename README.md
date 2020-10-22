@@ -1,15 +1,15 @@
 ---
-bibliography: vignettes/ace.bib
 ---
 
 # ACER
 
 <!-- badges: start -->
-[![R build status](https://github.com/CshlSiepelLab/ACE/workflows/R-CMD-check/badge.svg)](https://github.com/CshlSiepelLab/ACE/actions)
+[![Codecov test coverage](https://codecov.io/gh/CshlSiepelLab/ACE/branch/master/graph/badge.svg)](https://codecov.io/gh/CshlSiepelLab/ACE?branch=master)
+[![Build Status](https://travis-ci.com/CshlSiepelLab/ACE.svg?token=ULtSN5KyvxhgFXqRqPas&branch=main)](https://travis-ci.com/CshlSiepelLab/ACE)
 <!-- badges: end -->
 
 The goal of ACER is to test for differential essentiality
-between sets of samples from a CRISPR knockout screen [@Hutton2020].  See
+between sets of samples from a CRISPR knockout screen [[1]](#1).  See
 `vignettes(package=ACER)` for detailed discussion.
 
 ## Installation
@@ -40,3 +40,7 @@ newResultsObj <- optimizeModelParameters(user_DataObj = newDataObj,
 writeResObj(newResultsObj)
 ```
 # References
+<a id="1">[1]</a>
+Hutton, E. R., Vakoc, C. R., and Siepel, A. (2020).
+ACE: A Probabilistic Model for Characterizing Gene-Level Essentiality in CRISPR Screens.
+bioRxiv, https://www.biorxiv.org/content/10.1101/868919v2
