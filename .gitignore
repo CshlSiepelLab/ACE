@@ -8,3 +8,4 @@ src/*.dll
 inst/doc
 ACE_output_data/
 Meta
+doc

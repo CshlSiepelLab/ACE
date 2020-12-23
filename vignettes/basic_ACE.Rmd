@@ -11,6 +11,7 @@ address:
 lead_author_surname: Hutton
 doi: "https://github.com/CshlSiepelLab/ACE"
 output: 
+  #html_document
   pinp::pinp
   
 keep_tex: false

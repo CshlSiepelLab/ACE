@@ -3,7 +3,9 @@ language: r
 before_install:
   - tlmgr install extsizes
 
-r_check_args: "--no-build-vignettes"
+r_check_args: "--no-manual --ignore-vignettes"
+
+r_build_args: "--no-manual --no-build-vignettes"
 
 r_packages:
   - covr
