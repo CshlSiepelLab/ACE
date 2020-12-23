@@ -1,4 +1,4 @@
-context("Parameter Optimization")
+context("Testing Parameter Optimization")
 library(ACER)
 setup({
   write.table(data.table('guide' = paste0('g', 1),
@@ -16,15 +16,13 @@ setup({
   write.table(data.table('sgrna' = paste0('g', 1:3),
                          'count' = c(200,300,300)),
               file = 'testMaster.txt', row.names = F)
-  write.table(data.table('sgrna' = paste0('g', 1:3),
-                         'count' = c(2000,3000,3000)),
-              file = 'testMaster2.txt', row.names = F)
 })
+
 teardown({
   file.remove('testZeroCountsOneGuide.txt', 'testZeroCountsInOne.txt',
-              'testMaster.txt', 'testMaster2.txt')
+              'testMaster.txt')
   file.remove(sapply(dir('ACE_output_data'),function(f) {
-    file.path('ACE_output_data', f)}), 'ACE_output_data')
+    file.path('ACE_output_data', f)}))
 })
 
 # For testing external function interfaces.
@@ -60,19 +58,10 @@ test_that('0 counts in depleted samples, no init, passed to getLLNoInit', {
                              hasInitSeq = F)
   expect_equal(3, nrow(testDataObj$dep_counts))
   testModelObj <- ModelObj$new(testDataObj)
-  expect_output(testResObj <- optimizeModelParameters(testDataObj,
-                                        testModelObj))
+  testResObj <- optimizeModelParameters(testDataObj,
+                                        testModelObj)
   expect_false(is.na(testResObj$gene_results$fit_gene_param))
 
-})
-
-test_that('Multiple masterlibraries can be included without init seq.', {
-
-
-  expect_output(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt',
-                                                           'testMaster2.txt'),
-                                           countFile = 'testZeroCountsInOne.txt',
-                                           hasInitSeq = F))
 })
 
 # what happens when you try to optimize with 0 counts?
@@ -89,20 +78,40 @@ test_that('Require counts in some guides in depleted samples if no init seq.', {
 test_that('Negative and positive ess values should not be accepted by callGetLLByGene.', {
 
   # no warnings if no counts just in depleted sample.
-  expect_output(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt'),
+  testDataObj <- DataObj$new(masterFiles = c('testMaster.txt'),
                                             countFile = 'testZeroCountsInOne.txt',
-                                            hasInitSeq = F))
+                                            hasInitSeq = F)
   testModelObj <- ModelObj$new(testDataObj)
+  
+  # callGetLLByGene not meant to be called outside of the ResObj;
+  # manually creating resObj.
+  if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
+  tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
+  log_file <- file(file.path('ACE_output_data',
+                             paste0('test_callGetLLByGene_log_', tStamp)),
+                   open='w+')
+  on.exit(close(log_file))
+  write_log <- function(message_vector) {
+    if (is.atomic(message_vector)) {
+      cat(message_vector,'\n', file=log_file, append=T)
+    } else {
+      suppressWarnings(write.table(message_vector, file = log_file, 
+                                   col.names=T, append=T))
+    } 
+  }
+  
   baseParams <- list(useGene = 'gene1',
                      useSamples = 1,
                      sample_effects = 1,
                      guide_efficiency = c(1,1,1),
                      user_DataObj = testDataObj,
-                     user_ModelObj = testModelObj)
-  expect_output(res1 <- do.call(callGetLLByGene, append(list('geneEss' = 1), baseParams)))
-  expect_output(res2 <- do.call(callGetLLByGene, append(list('geneEss' = 0), baseParams)))
-  expect_output(res3 <- do.call(callGetLLByGene, append(list('geneEss' = -1), baseParams)))
-  expect_output(res4 <- do.call(callGetLLByGene, append(list('geneEss' = 2), baseParams)))
+                     user_ModelObj = testModelObj,
+                     write_log = write_log)
+  # expect no warning messages, which are passed outside the log file.
+  res1 <- do.call(callGetLLByGene, append(list('geneEss' = 1), baseParams))
+  res2 <- do.call(callGetLLByGene, append(list('geneEss' = 0), baseParams))
+  res3 <- do.call(callGetLLByGene, append(list('geneEss' = -1), baseParams))
+  res4 <- do.call(callGetLLByGene, append(list('geneEss' = 2), baseParams))
   # expect values returned to be the same at and below/above the lower/upper
   # boundaries, respectively.
   expect_equal(res2, res3)

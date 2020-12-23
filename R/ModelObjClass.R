@@ -1,5 +1,6 @@
 #' ModelObj Environment
 #'
+#' @description 
 #' This R6 environment object processes the raw data loaded in the provided
 #' \code{'user_DataObj'} to calculate model constants according to user
 #' specifications.  Computes sample scaling parameters, the vector of infected
@@ -34,7 +35,6 @@
 #' @export
 ModelObj <- R6Class("ModelObj",
                     private = list(
-                      
                       write_log = 'function'),
                     public = list(
                       #' @field mean_var_model_params Coefficients to use in mean-var model.
@@ -73,10 +73,12 @@ ModelObj <- R6Class("ModelObj",
                         
                         # Create log file for info, warnings, and errors.
                         if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
-                        tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
-                        log_file <- file(file.path('ACE_output_data',paste0('ACE_ModelObj_log_', tStamp)),
+                        tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
+                        log_file <- file(file.path('ACE_output_data',
+                                                   paste0('ACE_ModelObj_log_', tStamp,
+                                                                            '.txt.')),
                                          open='w+')
-                        on.exit(close(log_file)) # TODO: move to finalize()?
+                        on.exit(close(log_file)) 
                         
                         #'  Write messages and warnings to log file.
                         #'  @param message_vector String or table to write.
@@ -211,10 +213,10 @@ ModelObj <- R6Class("ModelObj",
                             private$write_log('All samples in count data match the test subtype; no differential essentiality calculated.')
                           } else {
                             self$test_sample_subtype_cols <- test_sample_idx
-                            message("Using the following samples as our test set:")
-                            message(names(user_DataObj$dep_counts)[self$test_sample_subtype_cols])
+                            message("Using the following number of samples as our test set:")
+                            message(length(self$test_sample_subtype_cols))
                             private$write_log("Using the following samples as our test set:")
-                            private$write_log(names(user_DataObj$dep_counts)[self$test_sample_subtype_cols])
+                            private$write_log(c(names(user_DataObj$dep_counts)[self$test_sample_subtype_cols]))
                           }
                         }
 
@@ -268,7 +270,8 @@ ModelObj <- R6Class("ModelObj",
                           avgNeg <- getLfcDt(user_DataObj = user_DataObj,
                                              master_freq_dt = self$master_freq_dt,
                                              getCI=F,
-                                             isSim = F)
+                                             isSim = F,
+                                             write_log = private$write_log)
                           sdNeg <- sd(avgNeg[gene %in% neg_ctrls, score])
                           medNeg <- median(avgNeg[gene %in% neg_ctrls, score])
                           useNeg <- avgNeg[gene %in% neg_ctrls &

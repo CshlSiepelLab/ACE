@@ -11,12 +11,13 @@
 #' @param guide_efficiency Numeric vector of guide efficiency parameters.
 #' @param user_DataObj DataObj class;
 #' @param user_ModelObj ModelObj class.
+#' @param write_log Function with time-stamped file to output messages.
 #' @return returns log likelihood of given parameters, given data in parent ModelObjClass.
 #' @export
 callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                             guide_efficiency,
-                            user_DataObj, user_ModelObj) {
-  print('called callGetLLByGene')
+                            user_DataObj, user_ModelObj, write_log) {
+  write_log('called callGetLLByGene')
   if (geneEss < 0) geneEss <- 0
 
   debugArgList <- function(argList, argNames, printArgList = F){
@@ -35,7 +36,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
     }
 
     if (printArgList) {
-      tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
+      tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
       cat("arg list lengths and head:\n", file = paste0(tStamp, '_argList.txt'),
           append = F)
       cat('useGene:\n', useGene, '\nuseSamples:\n', useSamples,'\n',
@@ -49,17 +50,20 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
       }
       save(argList, file = paste0('argList_', tStamp,'.RData'))
     }
-    if (isProblem) stop(cat("NA's in argList, see", tStamp,"_argList.txt"))
+    if (isProblem) {
+      write_log("NA's in argList, see", tStamp,"_argList.txt")
+      stop(cat("NA's in argList, see", tStamp,"_argList.txt"))
+    }
   }
 
   # get order of rows corresponding to gene in count data.
   useGuideCounts <- which(user_DataObj$guide2gene_map$gene == useGene)
   if (any(sapply(list(useGuideCounts, useSamples), length) < 1)) {
-    print('samples or guides not found.')
-    print(useGuideCounts[1:10])
-    print('useSamples')
-    print(useSamples)
-    stop('error in optimizeModelParams')
+    write_log('samples or guides not found.')
+    write_log(useGuideCounts[1:10])
+    write_log('useSamples')
+    write_log(useSamples)
+    stop('error in optimizeModelParams: genes or samples not found.')
   }
   useGuides <- user_DataObj$guide2gene_map$sgrna[useGuideCounts]
   hasInit <- is.data.table(user_DataObj$init_counts)
@@ -92,9 +96,9 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                                                                    masterlib],
                                      function(i) which(useMasterSamples %in% i))) - 1 # base 0 in Cpp.
     if (length(useMasterSamples) < 1) {
-      print('masterlib not found')
-      print(useMasterSamples[1:10])
-      print(user_DataObj$sample_masterlib[1:10])
+      write_log('masterlib not found')
+      write_log(useMasterSamples[1:10])
+      write_log(user_DataObj$sample_masterlib[1:10])
       stop('error identifying master library.')
     }
     # data.table strips '.txt' from column names somewhere in MOdelobj.
@@ -197,7 +201,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
     stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
-    print('NA or inf ll returned!')
+    write_log('NA or inf ll returned!')
     return(-1e20)
   }
   return(ll)

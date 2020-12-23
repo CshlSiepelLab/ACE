@@ -8,7 +8,9 @@ optimizeModelParameters(
   user_DataObj,
   user_ModelObj,
   fit_sample_parameter = F,
-  subset_genes = NA
+  subset_genes = NA,
+  converge_ll = 100,
+  max_iter = 10
 )
 }
 \arguments{
@@ -19,6 +21,10 @@ optimizeModelParameters(
 \item{fit_sample_parameter}{User option to fit by-sample parameters.}
 
 \item{subset_genes}{optional list of start & end points of gene indices to subset.}
+
+\item{converge_ll}{Tolerated variation in likelihood to end optimization; default 100.}
+
+\item{max_iter}{Maximum number of optimization iterations, regardless of convergence. Default 10.}
 }
 \value{
 Data.table with Gene name, optimized essentiality,  guide_efficiency, sample_response,

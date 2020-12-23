@@ -14,16 +14,23 @@
 ## usethis namespace: end
 #' @param user_DataObj DataObj with all experimental data.
 #' @param user_ModelObj ModelObj with simple inferred parameters for model.
-#' @param fit_sample_parameter User option to fit by-sample parameters.
+#' @param fit_sample_param User option to fit by-sample parameters.
+#' @param fit_guide_param User option to fit by-guide feature weights.
 #' @param subset_genes optional list of start & end points of gene indices to subset.
+#' @param converge_ll Tolerated variation in likelihood to end optimization; default 100.
+#' @param max_iter Maximum number of optimization iterations, regardless of convergence. Default 10.
 #' @return Data.table with Gene name, optimized essentiality,  guide_efficiency, sample_response,
 #'          guide_covariates, gene_essentiality likelihood, gene_ess CI (hessian),; one DT each for
 #'          "all", "test", and "control" conditions, and an optional 4th for differential depletion
 #'          effect sizes.
 #' @export
 
-optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_parameter=F,
-                                    subset_genes = NA) {
+optimizeModelParameters <- function(user_DataObj, user_ModelObj, 
+                                    fit_sample_param = F,
+                                    fit_guide_param = F,
+                                    subset_genes = NA,
+                                    converge_ll = 100,
+                                    max_iter = 10) {
   # Set local definitions to prevent R check note due to data.table syntax.
   test_fit <- NULL
   ctrl_fit <- NULL
@@ -32,83 +39,54 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
   fit_gene_param <- NULL
   
   # -------------------------------- Functions ------------------------------------- #
-  # given guide feature matrix, apply by-feature weight (features apply across guides),
-  # and transform the resulting covariate score to binary active/inactive or
-  # to percent efficiency.
-  getGuideEfficiency <- function(covar_weights) {
-    covar_score <- as.vector(user_ModelObj$guide_covar %*% t(covar_weights))
-    guide_efficiency <- ifelse(covar_score > 0.5, 1, 0)
-    return(guide_efficiency)
-  }
-
-  # assume each gene is independent, and optimize over a single gene at a time.
-  # while this single parameter optimization is very fast, this for loop *can* be parallelized.
-  # produces list of optim objects.
-  # Assume phi's positive selection impact capped at 20-fold.
-  #mu_1 = lambda1[s]*n
-  #mu_2 = lambda2[s]* mu_1 * (1 - eps + eps * phi)
-  # (see src/getLL.cpp for the actual math).
-  optFg <- function(startEss, sampleSubsets, sample_effects,
-                    guide_efficiency, geneList) {
-    optObjList <- list()
-    nullLogLikeList <- list()
-    tStamp <- paste(unlist(stringr::str_split(Sys.time(), ' ')), collapse='_')
-    for (subset in seq_along(sampleSubsets)) {
-      for (gene_idx in seq_along(geneList)) {
-        gene <- geneList[[gene_idx]]
-        cat("optimizing parameters for gene: ", gene, '\n')
-        optimOut <- capture.output(
-          optObjList[[names(sampleSubsets)[subset]]][[gene]] <- optim(par = startEss[gene],
-                                                                      fn = callGetLLByGene,
-                                                                      useGene = gene,
-                                                                      useSamples = sampleSubsets[[subset]],
-                                                                      sample_effects = sample_effects,
-                                                                      guide_efficiency = guide_efficiency,
-                                                                      user_DataObj = user_DataObj,
-                                                                      user_ModelObj = user_ModelObj,
-                                                                      lower = 1e-20,
-                                                                      upper = 20,
-                                                                      method = "Brent",
-                                                                      control = list(fnscale = -1, trace = 6, maxit = 1),
-                                                                      hessian=T))
-        nullOut <- capture.output(
-          nullLogLikeList[[names(sampleSubsets)[subset]]][[gene]] <- callGetLLByGene(geneEss = 1, useGene = gene,
-                                                                                     useSamples = sampleSubsets[[subset]],
-                                                                                     sample_effects = sample_effects,
-                                                                                     guide_efficiency = guide_efficiency,
-                                                                                     user_DataObj = user_DataObj,
-                                                                                     user_ModelObj = user_ModelObj))
-        if (gene_idx == 1) {
-          write(optimOut, file = file.path('ACE_output_data',paste0(tStamp, 'sample_optim_output.txt')))
-          write(nullOut,  file = file.path('ACE_output_data',paste0(tStamp, 'sample_null_output.txt')))
-        }
-      }
-      print("finished optimizing one subset:")
-      print(names(sampleSubsets)[subset])
-      print(sampleSubsets[[subset]])
+  
+  write_log_set_file <- function(message_vector, log_file) {
+    if (is.atomic(message_vector)) {
+      cat(message_vector,'\n', file=log_file, append=T)
+    } else {
+      suppressWarnings(write.table(message_vector, file = log_file, 
+                                   col.names=T, append=T))
     }
-    return(list(optObjList, nullLogLikeList))
   }
 
   # -------------------------------- Main Method -------------------------------------
 
-  # Initialize
+  # Create log file. 
   if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
+  tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
+  log_file <- file(file.path('ACE_output_data',paste0('ACE_optim_log_', tStamp,
+                                                      '.txt')),
+                   open='w+')
+  on.exit(close(log_file))
+  write_log <- function(message_vector) {
+    write_log_set_file(message_vector, log_file)
+    return()
+  }
+  
+  # Determine indices of genes to optimize. 
   geneList <- unique(user_DataObj$guide2gene_map$gene)
   numGenes <- length(geneList)
-  if (is.list(subset_genes)) {
+  if (is.list(subset_genes) & length(subset_genes)==2) {
     if (any(c(subset_genes[[1]] < 1,
               subset_genes[[2]] > nrow(user_DataObj$dep_counts),
               length(subset_genes) > 2))) {
-      cat('Only ',numGenes, ' genes queried.')
+      message('Only ',numGenes, ' genes queried.')
+      write_log(c('Only ',numGenes, ' genes queried.'))
+      write_log('Error: invalid gene subset specified.')
       stop('invalid gene subset specified.')
     }
     subsetG <- do.call(seq, subset_genes)
+  } else if (is.vector(subset_genes) & all(!is.na(subset_genes))) {
+    if (is.numeric(subset_genes)) {
+      subsetG <- subset_genes
+    } else {
+      subsetG <- which(geneList %in% subset_genes)
+    }
   } else if (is.na(subset_genes[1])) {
     subsetG <- 1:numGenes
-  } else if (is.vector(subset_genes)) {
-    subsetG <- subset_genes
   } else {
+    write_log('Error: Invalid gene subset argument:')
+    write_log(subset_genes)
     stop('invalid gene subset argument.')
   }
   guide_efficiency <- rep(1, nrow(user_DataObj$dep_counts))
@@ -124,19 +102,72 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
 
   # 3 - optimize by-gene params;
   # Determine differential depletion in sample subsets by fitting TWO essential
-  # parameters per gene
+  # parameters per gene, one global and one subset-specific.
   optFgObj <- optFg(startEss, sampleSubsets, sample_effects,
-                    guide_efficiency, geneList[subsetG])
+                    guide_efficiency, geneList[subsetG], write_log,
+                    user_DataObj = user_DataObj,
+                    user_ModelObj = user_ModelObj)
+  message('Initial by-gene parameter optimization complete')
+  optObjList <- optFgObj[[1]]
+  nullLogLikeList <- optFgObj[[2]] 
+  
+  # 4 - iteratively optimize sample-, guide-, and gene-specific parameters.
+  # Optional.
+  iterNum <- 0
+  if (fit_sample_param | fit_guide_param) {
+    continueOptimizing <- T
+    isConverged <- F
+    while (continueOptimizing) {
+      old_likelihood_estimate <- sum(optObjList$gene_results$ll)
+      
+      if (fit_sample_param) {
+        optSampleObj <- optSample(optFgObj$sample_effects,
+                                  optFgObj$gene_effects,
+                                  optFgObj$guide_efficiency,
+                                  geneList[subsetG],
+                                  write_log,
+                                  user_DataObj = user_DataObj,
+                                  user_ModelObj = user_ModelObj)
+      } else {
+        optSampleObj <- optFgObj # just a pointer, not a clone.
+      }
+      
+      if (fit_guide_param) {
+        optGuideObj <- optGuide(optFgObj$guide_efficiency,
+                                optFgObj$gene_effects,
+                                optFgObj$sample_effects,
+                                geneList[subsetG],
+                                write_log,
+                                user_DataObj = user_DataObj,
+                                user_ModelObj = user_ModelObj)
+      } else {
+        optGuideObj <- optSampleObj # just a pointer, not a clone.
+      }
+      # update gene efficiency estimates based on sample and guide effects.
+      optFgObj <- optFg(optFgObj$gene_effects, 
+                        sampleSubsets, 
+                        optSampleObj$sample_effects,
+                        optGuideObj$guide_efficiency, 
+                        geneList[subsetG], write_log,
+                        user_DataObj = user_DataObj,
+                        user_ModelObj = user_ModelObj)
+      iterNum <- iterNum + 1
+      
+      # Exit conditions.
+      delta_ll <- abs(old_likelihood_estimate - sum(optObjList$gene_results$ll))
+      
+      if (iterNum == max_iter | delta_ll < converge_ll) {
+        write_log('Exit conditions met, converged: ', delta_ll < converge_ll)
+        continueOptimizing <- F
+      }
+    }
+  }      
+  message(paste0('Optimization complete, iteration: ', iterNum))
+  write_log(paste0('Optimization complete, iteration: ', iterNum))
   optObjList <- optFgObj[[1]]
   nullLogLikeList <- optFgObj[[2]]
   gene_essentiality[subsetG] <- sapply(optObjList[['all']], function(i) i$par)
-
-  # OPtional: iterative optimization of sample-specific tau and gene essentailtiy phi.
-  # startEss <- gene_essentiality
-  # guide_essentiality <- rep(gene_essentiality,
-  # times = table(user_DataObj$guide2gene_map$gene))
-  # if (fit_sample_effects) {
-
+  
   # TODO: final_ReturnObj <- ReturnObj$new(optObjList, user_DataObj, user_ModelObj)
   # @return List with:
   #         -- gene_results
@@ -158,7 +189,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
   try(gene_results[, 'fit_se_all' := sapply(seq_along(fit_hess),
                                             function(i) get95Int(fit_hess[[i]],
                                                                  gene_results$fit_gene_param[i])[[3]])])
-  print(head(gene_results))
+  write_log('Sample results:')
+  write_log(head(gene_results))
 
   ## Get results for differential essentiality between test & ctrl samples. ##
   diff_genes <- NA
@@ -189,7 +221,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj, fit_sample_para
       test_scale <- diff_genes[gene %in% user_ModelObj$neg_ctrls, median(test_fit)]
       ctrl_scale <- diff_genes[gene %in% user_ModelObj$neg_ctrls, median(ctrl_fit)]
       gene_results[, fit_gene_param := fit_gene_param/all_scale]
-      print(c(all_scale, test_scale, ctrl_scale))
+      write_log('Inferred sample parameters:')
+      write_log(c(all_scale, test_scale, ctrl_scale))
       diff_genes[, all_fit := all_fit/all_scale]
       diff_genes[, test_fit := test_fit/test_scale]
       diff_genes[, ctrl_fit := ctrl_fit/ctrl_scale]

@@ -11,7 +11,8 @@ callGetLLByGene(
   sample_effects,
   guide_efficiency,
   user_DataObj,
-  user_ModelObj
+  user_ModelObj,
+  write_log
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ callGetLLByGene(
 \item{user_DataObj}{DataObj class;}
 
 \item{user_ModelObj}{ModelObj class.}
+
+\item{write_log}{Function with time-stamped file to output messages.}
 }
 \value{
 returns log likelihood of given parameters, given data in parent ModelObjClass.

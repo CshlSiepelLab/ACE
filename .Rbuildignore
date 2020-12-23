@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^\.travis.yml
+^ACE_output_data
+^doc$
+^Meta$
+^\.github$
+^codecov\.yml$

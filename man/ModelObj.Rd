@@ -18,11 +18,6 @@ Contains:
 -- guidePrior = 'string'
 }
 \description{
-ModelObj Environment
-
-ModelObj Environment
-}
-\details{
 This R6 environment object processes the raw data loaded in the provided
 \code{'user_DataObj'} to calculate model constants according to user
 specifications.  Computes sample scaling parameters, the vector of infected

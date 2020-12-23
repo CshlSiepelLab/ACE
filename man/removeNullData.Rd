@@ -4,10 +4,12 @@
 \alias{removeNullData}
 \title{Function removeNullData}
 \usage{
-removeNullData(user_DataObj)
+removeNullData(user_DataObj, write_log)
 }
 \arguments{
 \item{user_DataObj}{Class DataObj, to be stripped. Must be modifiable.}
+
+\item{write_log}{Function to write output to a log file.}
 }
 \description{
 Function to strip out sgRNA & samples with no count data.

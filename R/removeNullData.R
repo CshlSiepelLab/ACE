@@ -5,8 +5,9 @@
 #' in DataObjClass
 #' until AFTER erroneous samples are removed, or indicing will be messed up.
 #' @param user_DataObj Class DataObj, to be stripped. Must be modifiable.
+#' @param write_log Function to write output to a log file.
 #' @export
-removeNullData <- function(user_DataObj) {
+removeNullData <- function(user_DataObj, write_log) {
   
   # Set local definitions to prevent R check note due to data.table syntax.
   masterlib <- NULL
@@ -42,7 +43,6 @@ removeNullData <- function(user_DataObj) {
     sapply(seq_along(user_DataObj$master_counts), function(i) {
       mlibName <- names(user_DataObj$master_counts)[i]
       mlib <- user_DataObj$master_counts[[mlibName]]
-      # print(head(mlib))
       samples <- user_DataObj$sample_masterlib[masterlib %in% mlibName, sample]
       blankDepRows <- user_DataObj$dep_counts[, which(rowSums(.SD)==0), 
                                               .SDcols = samples]
@@ -75,9 +75,10 @@ removeNullData <- function(user_DataObj) {
                     names(user_DataObj$master_counts)[i], 'has no counts.'))
       } else if (any(blankS)) {
         warning('Some master library replicates are blank; removing.')
-        print(head(user_DataObj$master_counts[[i]]))
+        write_log('Some master library replicates are blank; removing.')
+        write_log('Master count file with blanks (setting to NULL):')
+        write_log(head(user_DataObj$master_counts[[i]][(which(blanks)),]))
         user_DataObj$master_counts[[i]][, (which(blankS)) := NULL]
-        print(head(user_DataObj$master_counts[[i]]))
       }
     })
     if (any(user_DataObj$cells_infected == 0)) {
@@ -93,7 +94,7 @@ removeNullData <- function(user_DataObj) {
   # guide2gene_map.
   if (!isFALSE(removeGuides)) {
     warning('Some guides have no counts in any depleted samples or masterlib, removing.')
-    tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
+    tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='-')
     write.table(removeGuides, file = file.path('ACE_output_data',paste0(tStamp,'no_count_guides.txt')))
     if (length(removeGuides) == nrow(user_DataObj$dep_counts)) {
       stop('No valid data submitted.')

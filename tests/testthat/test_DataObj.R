@@ -34,6 +34,23 @@ setup({
               file = 'test_DropSample.txt', row.names = F)
   write(x='Debugging Messages from DataObj Class',
         file = 'DataObj_debugger.txt')
+  write.table(data.table('guide' = paste0('g', 1:3),
+                         'gene' = 'gene1',
+                         'dep_1' = c(0,2,3),
+                         'dep_2' = c(0,4,5)),
+              row.names = F,
+              file = 'testZeroCountsInOne.txt')
+  write.table(data.table('sgrna' = paste0('g', 1:3),
+                         'count' = c(200,300,300)),
+              file = 'testMaster.txt', row.names = F)
+  write.table(data.table('sgrna' = paste0('g', 1:3),
+                         'count' = c(2000,3000,3000)),
+              file = 'testMaster2.txt', row.names = F)
+  write.table(data.table('sample' = c('dep_1', 'dep_2'),
+                         'masterlib_file' = c('testMaster2.txt', 
+                                              'testMaster.txt')),
+              col.names = T, row.names=F,
+              file = 'testMasterInfo.txt')
 })
 
 teardown({
@@ -42,10 +59,14 @@ teardown({
               'test_CountOneDep.txt',
               'test_CountNull.txt',
               'test_MasterNull.txt',
-              'test_DropSample.txt')
+              'test_DropSample.txt',
+              'testMaster.txt',
+              'testMaster2.txt',
+              'testZeroCountsInOne.txt',
+              'testMasterInfo.txt')
 
   file.remove(sapply(dir('ACE_output_data'),function(f) {
-    file.path('ACE_output_data', f)}), 'ACE_output_data')
+    file.path('ACE_output_data', f)}))
   file.remove('DataObj_debugger.txt')
 })
 
@@ -79,5 +100,25 @@ test_that('Blank guides should be removed from count data with a warning.', {
 
 test_that('Test guides missing from only one sample are included.', {
 
-  expect_output(DataObj$new(countFile = 'test_DropSample.txt'))
+  testDataObj <- DataObj$new(countFile = 'test_DropSample.txt',
+                            hasInitSeq = T)
+  # 2 samples, 3 guides; all should be present.
+  expect_equal(dim(testDataObj$dep_counts), c(3,2))
+})
+
+test_that('Create DataObj with multiple masterlibraries, no init seq.', {
+  # No sample-masterlib mapping, but multiple master libraries.
+  # ACE requires masterlibrary replicates as single table.
+  expect_error(testDataObj <- DataObj$new(masterFiles = c('testMaster.txt',
+                                             'testMaster2.txt'),
+                             countFile = 'testZeroCountsInOne.txt',
+                             hasInitSeq = F),
+               "please provide assignment of master libraries to samples")
+  # Sample-masterlib mapping provided.
+  expect_message(testDataObj2 <- DataObj$new(masterFiles = c('testMaster.txt',
+                                                            'testMaster2.txt'),
+                                            countFile = 'testZeroCountsInOne.txt',
+                                            hasInitSeq = F,
+                                            sampleMasterInfoFile = 'testMasterInfo.txt'))
+  expect_equal(length(testDataObj2$master_counts),2)
 })

@@ -3,21 +3,18 @@
 \docType{class}
 \name{DataObj}
 \alias{DataObj}
-\title{DataObjClass: R6 Environment Object for Raw Data}
+\title{DataObjClass: R6 Environment Object for CRISPR Data}
 \value{
 DataObj(R6) of all data used in experiment.  When applicable, raw
          count data is returned.  Normalization should happen as ModelObj.
 }
 \description{
-DataObjClass: R6 Environment Object for Raw Data
-
-DataObjClass: R6 Environment Object for Raw Data
-}
-\details{
 This function is an R6 object class to create an environment for data analysis.
 Use to load all data associated with a single-target negative selection
 CRISPR screen; stores all data with minimal processing, but checks for
 errors and data inconsistencies.
+}
+\details{
 All data objects in this class currently public, permitting operations without
 copying over the entire dataset in function calls.
 Normalization results and other preprocessing performed by ModelObjClass.
@@ -52,20 +49,9 @@ Normalization results and other preprocessing performed by ModelObjClass.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-help}{\code{DataObj$help()}}
 \item \href{#method-new}{\code{DataObj$new()}}
 \item \href{#method-clone}{\code{DataObj$clone()}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-help"></a>}}
-\if{latex}{\out{\hypertarget{method-help}{}}}
-\subsection{Method \code{help()}}{
-Remind users of arguments.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{DataObj$help()}\if{html}{\out{</div>}}
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
@@ -110,7 +96,9 @@ present in count file?}
 
 \item{\code{sampleMasterInfoFile}}{File mapping samples to masterlibrary files.}
 
-\item{\code{useSamples}}{Sample indices to analyze.}
+\item{\code{useSamples}}{Sample indices to analyze.
+Write messages and warnings to log file.
+@param message_vector String or table to write.}
 }
 \if{html}{\out{</div>}}
 }
