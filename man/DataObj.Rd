@@ -96,7 +96,7 @@ present in count file?}
 
 \item{\code{sampleMasterInfoFile}}{File mapping samples to masterlibrary files.}
 
-\item{\code{useSamples}}{Sample indices to analyze.
+\item{\code{useSamples}}{Sample indices to analyze (subsets data stored in object).
 Write messages and warnings to log file.
 @param message_vector String or table to write.}
 }

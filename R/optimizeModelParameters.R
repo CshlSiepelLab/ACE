@@ -57,7 +57,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
   log_file <- file(file.path('ACE_output_data',paste0('ACE_optim_log_', tStamp,
                                                       '.txt')),
                    open='w+')
-  on.exit(close(log_file))
+  on.exit(close(log_file), add=T)
   write_log <- function(message_vector) {
     write_log_set_file(message_vector, log_file)
     return()

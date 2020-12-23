@@ -26,6 +26,8 @@ optFg(
 
 \item{geneList}{Genes to evaluate sequentially in this function call.}
 
+\item{write_log}{Function to write to central log file.}
+
 \item{user_DataObj}{DataObject containing count data to analyze.}
 
 \item{user_ModelObj}{ModelObject with pre-processed model parameters.}

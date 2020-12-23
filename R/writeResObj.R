@@ -8,7 +8,7 @@ writeResObj <- function(user_ResObj) {
   objName <- deparse(substitute(user_ResObj))
   message("writing results from")
   message(objName)
-  tStamp <- paste(unlist(str_split(Sys.time(), ' ')), collapse='_')
+  tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
   v<- tStamp
   if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
   save(objName, file = file.path('ACE_output_data',paste0(objName, '_v', v)))

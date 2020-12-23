@@ -77,7 +77,7 @@ removeNullData <- function(user_DataObj, write_log) {
         warning('Some master library replicates are blank; removing.')
         write_log('Some master library replicates are blank; removing.')
         write_log('Master count file with blanks (setting to NULL):')
-        write_log(head(user_DataObj$master_counts[[i]][(which(blanks)),]))
+        write_log(head(user_DataObj$master_counts[[i]][(which(blankS)),]))
         user_DataObj$master_counts[[i]][, (which(blankS)) := NULL]
       }
     })

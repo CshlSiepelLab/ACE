@@ -5,9 +5,9 @@ init_Sample_2 test
 dep_Sample_2 test
 init_Sample_3 test
 dep_Sample_3 test
-init_Sample_1 ctrl
-dep_Sample_1 ctrl
-init_Sample_2 ctrl
-dep_Sample_2 ctrl
-init_Sample_3 ctrl
-dep_Sample_3 ctrl
+init_Sample_4 ctrl
+dep_Sample_4 ctrl
+init_Sample_5 ctrl
+dep_Sample_5 ctrl
+init_Sample_6 ctrl
+dep_Sample_6 ctrl

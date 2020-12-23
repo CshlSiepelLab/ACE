@@ -58,7 +58,7 @@ DataObj <- R6Class("DataObj",
                      #' @param hasInitSeq Default True; are counts for initial infected guides
                      #'                   present in count file?
                      #' @param sampleMasterInfoFile File mapping samples to masterlibrary files.
-                     #' @param useSamples Sample indices to analyze.
+                     #' @param useSamples Sample indices to analyze (subsets data stored in object).
                      initialize = function(masterFiles=NA,
                                            countFile,
                                            negCtrlFile = NA,
@@ -77,7 +77,7 @@ DataObj <- R6Class("DataObj",
                                                   paste0('ACE_DataObj_log_', tStamp,
                                                          '.txt')),
                                         open='w+')
-                       on.exit(close(log_file)) # TODO: move to finalize()?
+                       on.exit(close(log_file), add=T)
                        
                        #'  Write messages and warnings to log file.
                        #'  @param message_vector String or table to write.

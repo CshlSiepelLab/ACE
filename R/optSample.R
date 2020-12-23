@@ -3,6 +3,7 @@
 #' Given guide and gene parameters, use MLE to obtain sample parameters.
 #' Sample parameters assumed to be independent, so 1D optimization used.
 #' All samples present in user_DataObj are used.
+#' @importFrom utils setTxtProgressBar txtProgressBar
 #' @param sample_effects Sample effects to use on initiailization.
 #' @param gene_effects  By-gene essentiality parameters.
 #' @param guide_efficiency By-guide efficiency parameters.
@@ -17,16 +18,18 @@ optSample <- function(sample_effects,
                       write_log,
                       user_DataObj,
                       user_ModelObj) {
+  # placeholder
+  callGetLLBySample <- function()
   # Check for empty input.
   if (length(sample_effects)==0 | any(is.na(sample_effects))) {
     write_log('Error: Initial sample effects submitted to optSample is empty or NA')
-    write_log(sampleSubsets)
+    write_log(sample_effects)
     stop('Initial sample effects submitted to optSample is empty or NA')
   }
   if (length(use_genes)==0 | any(is.na(use_genes))) {
     write_log('Error: Gene list submitted to optSample is empty or NA')
     write_log('---')
-    write_log(head(geneList))
+    write_log(head(use_genes))
     write_log('---')
     stop('Error: Gene list submitted to optSample is empty or NA')
   }

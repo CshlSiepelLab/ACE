@@ -1,6 +1,7 @@
 #' Function optGuide
 #' 
 #' Given gene and sample parameters, use MLE to obtain guide parameters.
+#' @importFrom utils setTxtProgressBar txtProgressBar
 #' @param guide_features Weights for guide efficiency features to use on initialization.
 #' @param gene_effects By-gene essentiality parameters.
 #' @param sample_effects By-sample parameters.
@@ -15,6 +16,8 @@ optGuide <- function(guide_features,
                      write_log,
                      user_DataObj,
                      user_ModelObj) {
+  # placeholder.
+  callGetLLByGuideFeature <- function()
  # Check for empty input.
  if (length(guide_features)==0 | any(is.na(guide_features))) {
    write_log('Error: Initial guide effects submitted to optGuide empty or NA')
@@ -39,7 +42,7 @@ optGuide <- function(guide_features,
                                                    trace = 6))
     )
     # write optim output for first feature for debugging.
-    if (sample_idx == 1) {
+    if (eg_idx == 1) {
       write_log('=================== Sample optimization Log (iter 1) ======================')
       write_log(optimOut)
     }

@@ -78,7 +78,7 @@ ModelObj <- R6Class("ModelObj",
                                                    paste0('ACE_ModelObj_log_', tStamp,
                                                                             '.txt.')),
                                          open='w+')
-                        on.exit(close(log_file)) 
+                        on.exit(close(log_file),add=T) 
                         
                         #'  Write messages and warnings to log file.
                         #'  @param message_vector String or table to write.
@@ -268,7 +268,6 @@ ModelObj <- R6Class("ModelObj",
                           private$write_log('treating negative control file as single column.')
                           private$write_log(head(neg_ctrls))
                           avgNeg <- getLfcDt(user_DataObj = user_DataObj,
-                                             master_freq_dt = self$master_freq_dt,
                                              getCI=F,
                                              isSim = F,
                                              write_log = private$write_log)

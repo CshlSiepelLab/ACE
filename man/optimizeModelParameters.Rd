@@ -7,7 +7,8 @@
 optimizeModelParameters(
   user_DataObj,
   user_ModelObj,
-  fit_sample_parameter = F,
+  fit_sample_param = F,
+  fit_guide_param = F,
   subset_genes = NA,
   converge_ll = 100,
   max_iter = 10
@@ -18,7 +19,9 @@ optimizeModelParameters(
 
 \item{user_ModelObj}{ModelObj with simple inferred parameters for model.}
 
-\item{fit_sample_parameter}{User option to fit by-sample parameters.}
+\item{fit_sample_param}{User option to fit by-sample parameters.}
+
+\item{fit_guide_param}{User option to fit by-guide feature weights.}
 
 \item{subset_genes}{optional list of start & end points of gene indices to subset.}
 

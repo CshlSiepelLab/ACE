@@ -1,9 +1,11 @@
 #' Function optFg: By-gene essentiality optimization.
+#' @importFrom utils setTxtProgressBar txtProgressBar
 #' @param startEss Starting gene essentiality.
 #' @param sampleSubsets Sample groupings into test, ctrl, and 'all' panels.
 #' @param sample_effects By-sample parameters.
 #' @param guide_efficiency By-guide efficiency parameter.
 #' @param geneList Genes to evaluate sequentially in this function call.
+#' @param write_log Function to write to central log file.
 #' @param user_DataObj DataObject containing count data to analyze.
 #' @param user_ModelObj ModelObject with pre-processed model parameters.
 # assume each gene is independent, and optimize over a single gene at a time.
