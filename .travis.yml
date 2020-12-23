@@ -1,5 +1,8 @@
 language: r
 
+before_install:
+  - tlmgr install extsizes
+
 r_packages:
   - covr
   
