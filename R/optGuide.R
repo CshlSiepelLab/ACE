@@ -43,7 +43,9 @@ optGuide <- function(guide_features,
     )
     # write optim output for first feature for debugging.
     if (eg_idx == 1) {
-      write_log('=================== Sample optimization Log (iter 1) ======================')
+      write_log(paste0('=================== ',
+                       'Sample optimization Log (iter 1) ',
+                       '======================'))
       write_log(optimOut)
     }
   }

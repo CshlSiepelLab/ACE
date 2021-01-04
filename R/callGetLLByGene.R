@@ -1,8 +1,7 @@
 #' Function callGetLLByGene
 #'
-#' gets likelihood of gene/sample/guide parameters by calling RCpp functions
-#' getLL, etc..  Designed to be called for a single gene.
-#' Last updated December 2019.
+#' Calls Rcpp functions to evaluate the likelihood of a single GENE parameter
+#' given sample and guide parameters.  Assumes gene independence.
 #' @import data.table
 #' @param geneEss Double gene essentiality parameter.
 #' @param useGene String; name of gene to evaluate under given model parameters.
@@ -19,42 +18,6 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                             user_DataObj, user_ModelObj, write_log) {
   write_log('called callGetLLByGene')
   if (geneEss < 0) geneEss <- 0
-
-  debugArgList <- function(argList, argNames, printArgList = F){
-    isProblem <-F
-    if (any(sapply(argList, function(i) any(is.na(unlist(i)))))) {
-      isProblem <- T
-      printArgList <- T
-    }
-    if (any(sapply(argList, function(i) any(is.infinite(unlist(i)))))) {
-      isProblem <- T
-      printArgList <- T
-    }
-    if (any(sapply(argList, function(i) any(is.null(unlist(i)))))) {
-      isProblem <- T
-      printArgList <- T
-    }
-
-    if (printArgList) {
-      tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
-      cat("arg list lengths and head:\n", file = paste0(tStamp, '_argList.txt'),
-          append = F)
-      cat('useGene:\n', useGene, '\nuseSamples:\n', useSamples,'\n',
-          file = paste0(tStamp, '_argList.txt'), append=T)
-      for (i in seq_along(argList)) {
-        write(c(argNames[i], 'length: ', length(argList[[i]]), 'head:'),
-              append=T,
-              file = paste0(tStamp, '_argList.txt'))
-        write(argList[[i]][1:10], file = paste0(tStamp, '_argList.txt'),
-              append = T)
-      }
-      save(argList, file = paste0('argList_', tStamp,'.RData'))
-    }
-    if (isProblem) {
-      write_log("NA's in argList, see", tStamp,"_argList.txt")
-      stop(cat("NA's in argList, see", tStamp,"_argList.txt"))
-    }
-  }
 
   # get order of rows corresponding to gene in count data.
   useGuideCounts <- which(user_DataObj$guide2gene_map$gene == useGene)
@@ -99,7 +62,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
       write_log('masterlib not found')
       write_log(useMasterSamples[1:10])
       write_log(user_DataObj$sample_masterlib[1:10])
-      stop('error identifying master library.')
+      stop('Could not identify paired master library.')
     }
     # data.table strips '.txt' from column names somewhere in MOdelobj.
     useMasterSamples <- sapply(useMasterSamples, function(i) strsplit(i, '.txt')[[1]])
@@ -143,7 +106,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                   'unlist(user_ModelObj$mean_var_model_params)',
                   'user_ModelObj$stepSize')
     # debugging inputs:
-    debugArgList(argList, argNames)
+    # debugArgList(argList, argNames)
     ll <- do.call(getLL, argList)
 
   } else if (hasInit & !hasGuidePrior) {
@@ -167,7 +130,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                   'user_ModelObj$unobserved_infected_cell_values',
                   'unlist(user_ModelObj$mean_var_model_params)',
                   'user_ModelObj$stepSize')
-     debugArgList(noMasterArgList, argNames)
+     # debugArgList(noMasterArgList, argNames)
     ll <- do.call(getLLNoMaster, noMasterArgList)
 
   } else if (hasGuidePrior & !hasInit) {
@@ -195,7 +158,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                   'user_ModelObj$unobserved_infected_cell_values',
                   'unlist(user_ModelObj$mean_var_model_params)',
                   'user_ModelObj$stepSize')
-    debugArgList(noInitArgList, argNames)
+    # debugArgList(noInitArgList, argNames)
     ll <- do.call(getLLNoInit, noInitArgList)
   } else {
     stop('invalid experimental design. Must have master/init and depleted sets.')

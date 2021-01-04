@@ -24,7 +24,7 @@
 #' @return ModelObj (R6Class).
 #' Contains:
 #' --  mean_var_model_params = "list",
-#' --  guide_covar = "matrix",
+#' --  guide_features = "matrix",
 #' --  unobserved_infected_cell_values = "vector",
 #' --  mean_var_model = "integer",
 #' --  init_scaling = "vector",
@@ -39,8 +39,8 @@ ModelObj <- R6Class("ModelObj",
                     public = list(
                       #' @field mean_var_model_params Coefficients to use in mean-var model.
                       mean_var_model_params = "list",
-                      #' @field guide_covar Matrix of by-guide features.
-                      guide_covar = "matrix",
+                      #' @field guide_features Matrix of by-guide features.
+                      guide_features = "matrix",
                       #' @field master_freq_dt Data.table of sgRNA frequencies in master libraries.
                       master_freq_dt = 'data.table',
                       #' @field unobserved_infected_cell_values Discrete values of infected cells for Riemann sum.
@@ -61,6 +61,8 @@ ModelObj <- R6Class("ModelObj",
                       use_neg_ctrl = T,
                       #' @field neg_ctrls String vector of gene names for negative controls.
                       neg_ctrls = 'vector',
+                      #' @field guide_features Matrix of guide efficiency features.
+                      guide_features = 'matrix',
 
                       #' @description Create ModelObj
                       initialize = function(user_DataObj=NA,
@@ -78,7 +80,7 @@ ModelObj <- R6Class("ModelObj",
                                                    paste0('ACE_ModelObj_log_', tStamp,
                                                                             '.txt.')),
                                          open='w+')
-                        on.exit(close(log_file),add=T) 
+                        on.exit(close(log_file),add=T)
                         
                         #'  Write messages and warnings to log file.
                         #'  @param message_vector String or table to write.
@@ -139,24 +141,41 @@ ModelObj <- R6Class("ModelObj",
                           stop("Invalid mean~var model specified.")
                         }
 
-                        # transform guide covariates into percent of efficient guides (frac_eff)
-                        # assuming a binary efficiency (either always or never cutting)  model,
-                        # dep_guides = essentiality * frac_eff * init_guides + (1-frac_eff) * init_guides
+                        # Normalize guide features to same mean and range (-1/2 to 1/2).
+                        # Feature weights with sigmoid transform will be used to
+                        # convert to percent of 'efficient' guides.
+                        # Can be equivalently reasoned as the fraction of 
+                        # effectively cutting guides or the penetrance of the
+                        # gene fitness effect.
+                        # first column of user_DAtaObj$guide_covar is sgRNA ID.
                         if (fit_guide_parameter & is.data.table(user_DataObj$guide_covar)) {
-                          self$guide_covar <- sapply(user_DataObj$guide_covars$sequence,
-                                                     function(x) str_count(x, '[GCgc]')/str_length(x))
-                          if (length(unique(self$guide_covar)) < 2) {
-                            message("all guides have identical covariates; unable to fit guide parameter.")
+                          guide_features <- apply(user_DataObj$guide_covar[,.SD, 
+                                                                                .SDcols=-1],
+                                                       2, function(i) {
+                                                         (i - mean(i))/(max(i)-min(i))
+                                                       })
+                          isVaried <- apply(guide_features, 2, uniqueN)
+                          if (all(isVaried < 2)) {
+                            message("all guides have an identical covariate; unable to fit guide parameter.")
                             private$write_log("all guides have identical covariates; unable to fit guide parameter.")
-                            self$guide_covar <- rep(1, nrow(user_DataObj$guide_covars))
+                            guide_features <- rep(1, nrow(user_DataObj$guide_covar))
+                          } else if (any(isVaried < 2)) {
+                            message('Some covariates identical across all guides; discarding.')
+                            private$write_log('Some covariates identical across all guides; discarding.')
+                            guide_features[, .SD := NULL, .SDcols = isVaried < 2]
                           }
+                          guide_features[, 'sgrnaID':= userDataObj$guide_covar[[1]]]
+                          setcolorder(guide_features, 'sgrnaID')
+                          self$guide_features <- guide_features[match(sgrnaID,
+                                                                      user_DataObj$guide2gene_map$sgrna),]
+                          if (#TODO)
                           message("Using the following features to fit guide efficiency:",
-                                  unique(self$guide_covar))
+                                  names(self$guide_features)[-1])
                           private$write_log("Using the following features to fit guide efficiency:",
-                                  unique(self$guide_covar))
+                                  names(self$guide_features))
                           
                         } else {
-                          self$guide_covar <- rep(1, nrow(use_counts))
+                          self$guide_features <- NA
                         }
 
                         # n_sg values; represent number of infected cells.
@@ -309,17 +328,18 @@ ModelObj <- R6Class("ModelObj",
 
                         # Debug everything calculated properly.
                         # mean_var_model_params can be a list of 2 numerics. Or a vector length guides.
-                        # guide_covar should be a numeric vector of length numGuides.
-                        if (any(sapply(c(self$mean_var_model_params, self$guide_covar,
+                        # guide_features should be a numeric matrix [numGuides x numFeatures].
+                        if (any(sapply(c(self$mean_var_model_params, self$guide_features,
                                          self$unobserved_infected_cell_values, self$mean_var_model),
                                        function(i) any(is.na(unlist(i)))))) {
                           private$write_log("ERROR: NA's generated in model object in:")
                           if (any(is.na(self$mean_var_model))) private$write_log("mean_var_model")
                           if (any(is.na(self$mean_var_model_params))) private$write_log("mean_var_Model_params")
-                          if (any(is.na(self$guide_covar))) private$write_log("guide_covar")
+                          if (any(is.na(self$guide_features))) private$write_log("guide_features")
                           stop("Error in ModelObjClass; inappropriate NA's found in data.")
                         }
                       }
+                      
                     )
 )
 # -------------------------------- End of Script -----------------------------------
