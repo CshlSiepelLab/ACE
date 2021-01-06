@@ -61,8 +61,6 @@ ModelObj <- R6Class("ModelObj",
                       use_neg_ctrl = T,
                       #' @field neg_ctrls String vector of gene names for negative controls.
                       neg_ctrls = 'vector',
-                      #' @field guide_features Matrix of guide efficiency features.
-                      guide_features = 'matrix',
 
                       #' @description Create ModelObj
                       initialize = function(user_DataObj=NA,
@@ -150,10 +148,10 @@ ModelObj <- R6Class("ModelObj",
                         # first column of user_DAtaObj$guide_covar is sgRNA ID.
                         if (fit_guide_parameter & is.data.table(user_DataObj$guide_covar)) {
                           guide_features <- apply(user_DataObj$guide_covar[,.SD, 
-                                                                                .SDcols=-1],
-                                                       2, function(i) {
-                                                         (i - mean(i))/(max(i)-min(i))
-                                                       })
+                                                                           .SDcols=-1],
+                                                  2, function(i) {
+                                                    (i - mean(i))/(max(i)-min(i))
+                                                  })
                           isVaried <- apply(guide_features, 2, uniqueN)
                           if (all(isVaried < 2)) {
                             message("all guides have an identical covariate; unable to fit guide parameter.")
@@ -168,7 +166,8 @@ ModelObj <- R6Class("ModelObj",
                           setcolorder(guide_features, 'sgrnaID')
                           self$guide_features <- guide_features[match(sgrnaID,
                                                                       user_DataObj$guide2gene_map$sgrna),]
-                          if (#TODO)
+                          # TODO: check for categorical features & expand.
+                          # TODO: check for NA's in submitted file.
                           message("Using the following features to fit guide efficiency:",
                                   names(self$guide_features)[-1])
                           private$write_log("Using the following features to fit guide efficiency:",
@@ -329,13 +328,12 @@ ModelObj <- R6Class("ModelObj",
                         # Debug everything calculated properly.
                         # mean_var_model_params can be a list of 2 numerics. Or a vector length guides.
                         # guide_features should be a numeric matrix [numGuides x numFeatures].
-                        if (any(sapply(c(self$mean_var_model_params, self$guide_features,
+                        if (any(sapply(c(self$mean_var_model_params,
                                          self$unobserved_infected_cell_values, self$mean_var_model),
                                        function(i) any(is.na(unlist(i)))))) {
                           private$write_log("ERROR: NA's generated in model object in:")
                           if (any(is.na(self$mean_var_model))) private$write_log("mean_var_model")
                           if (any(is.na(self$mean_var_model_params))) private$write_log("mean_var_Model_params")
-                          if (any(is.na(self$guide_features))) private$write_log("guide_features")
                           stop("Error in ModelObjClass; inappropriate NA's found in data.")
                         }
                       }

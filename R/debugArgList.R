@@ -22,18 +22,17 @@ debugArgList <- function(argList, argNames, printArgList = F){
   
   if (printArgList) {
     tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
-    cat("arg list lengths and head:\n", file = paste0(tStamp, '_argList.txt'),
+    outFile <- file.path('ACE_output_data', paste0(tStamp, '_argList.txt'))
+    cat("arg list lengths and head:\n", file = outFile,
         append = F)
-    cat('useGene:\n', useGene, '\nuseSamples:\n', useSamples,'\n',
-        file = paste0(tStamp, '_argList.txt'), append=T)
     for (i in seq_along(argList)) {
       write(c(argNames[i], 'length: ', length(argList[[i]]), 'head:'),
             append=T,
-            file = paste0(tStamp, '_argList.txt'))
-      write(argList[[i]][1:10], file = paste0(tStamp, '_argList.txt'),
+            file = outFile)
+      write(argList[[i]][1:10], file = outFile,
             append = T)
     }
-    save(argList, file = paste0('argList_', tStamp,'.RData'))
+    save(argList, file = file.path('ACE_output_data',paste0('argList_', tStamp,'.RData')))
   }
   if (isProblem) {
     write_log("NA's in argList, see", tStamp,"_argList.txt")

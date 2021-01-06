@@ -63,6 +63,18 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
     return()
   }
   
+  # Check optimization options valid.
+  if (fit_guide_param) {
+    if (!is.data.table(user_ModelObj$guide_features)) {
+      fit_guide_param <- F
+      message('Unable to fit guide parameters, no features contained in ModelObj.')
+      write_log('Unable to fit guide parameters, no features contained in ModelObj.')
+    } else {
+      message('Fitting guide parameters.')
+      write_log('Fitting guide parameters.')
+    }
+  }
+  
   # Determine indices of genes to optimize. 
   geneList <- unique(user_DataObj$guide2gene_map$gene)
   numGenes <- length(geneList)
@@ -89,7 +101,9 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
     write_log(subset_genes)
     stop('invalid gene subset argument.')
   }
-  guide_efficiency <- rep(1, nrow(user_DataObj$dep_counts))
+  # Initialize guide & gene parameters for first round of gene essentiality 
+  # estimation as perfectly efficient.
+  guide_efficiency <- NA
   guide_essentiality <- rep(1, nrow(user_DataObj$dep_counts))
   sampleSubsets <- list("all"=1:ncol(user_DataObj$dep_counts))
   startEss <- rep(1, length(geneList))
@@ -214,6 +228,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
     diff_genes[, "diff_depletion" := test_fit/ctrl_fit]
     dep_hess <- lapply(geneList, function(g) optObjList[['test']][[g]]$hessian)
     ctrl_hess <- lapply(geneList, function(g) optObjList[['ctrl']][[g]]$hessian)
+    
     # scale absolute essentiality value according to negative controls, if given.
     if (user_ModelObj$use_neg_ctrl & any(user_ModelObj$neg_ctrls %in% 
                                          diff_genes$gene)) {

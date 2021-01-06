@@ -73,8 +73,19 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
     subset_cells_infected <- user_DataObj$cells_infected[useSamples]
   }
 
+  # Convert guide efficiency feature weights to % effective by guide.
+  if (is.na(guide_efficiency)) {
+    gene_guide_efficiency <- rep(1, length(useGuideCounts))
+  } else if (is.vector(guide_efficiency)) {
+    write_log('guide_eff is')
+    write_log(guide_efficiency)
+    gene_guide_efficiency <- getGuideEfficiency(
+      guide_matrix = as.matrix(user_ModelObj$guide_features[useGuideCounts,.SD],
+                               ncol = ),
+      feature_weight = guide_efficiency)
+  } 
+  
   # Format arguments for cpp code - note 0-based indexing!!
-  gene_guide_efficiency <- guide_efficiency[useGuideCounts]
   gene_essentiality <- rep(geneEss, length(gene_guide_efficiency))
   subset_sample_effects <- sample_effects[useSamples]
   subset_dep_scaling <- user_ModelObj$dep_scaling[useSamples]
@@ -106,6 +117,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                   'unlist(user_ModelObj$mean_var_model_params)',
                   'user_ModelObj$stepSize')
     # debugging inputs:
+    checkArgList <- argList
     # debugArgList(argList, argNames)
     ll <- do.call(getLL, argList)
 
@@ -131,6 +143,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                   'unlist(user_ModelObj$mean_var_model_params)',
                   'user_ModelObj$stepSize')
      # debugArgList(noMasterArgList, argNames)
+    checkArgList <- noMasterArgList
     ll <- do.call(getLLNoMaster, noMasterArgList)
 
   } else if (hasGuidePrior & !hasInit) {
@@ -159,11 +172,14 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                   'unlist(user_ModelObj$mean_var_model_params)',
                   'user_ModelObj$stepSize')
     # debugArgList(noInitArgList, argNames)
+    checkArgList <- noInitArgList
     ll <- do.call(getLLNoInit, noInitArgList)
   } else {
     stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
+    x <- capture.output(debugArgList(checkArgList, argNames, printArgList = T))
+    write_log(x)
     write_log('NA or inf ll returned!')
     return(-1e20)
   }

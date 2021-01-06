@@ -72,8 +72,10 @@ optFg <- function(startEss, sampleSubsets, sample_effects,
     write_log(sampleSubsets[[subset]])
     setTxtProgressBar(progressBar, gene_idx + gene_idx * (subset - 1))
   }
+  gene_effects <- lapply(optObjList, function(i) i$par)
+  names(gene_effects) <- geneList
   return(list(optObjList, nullLogLikeList,
               'sample_effects'=sample_effects,
               'guide_efficiency' = guide_efficiency,
-              'gene_effects' = sapply(optObjList, function(i) i$par)))
+              'gene_effects' = gene_effects))
 }

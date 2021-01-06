@@ -103,7 +103,7 @@ test_that('Negative and positive ess values should not be accepted by callGetLLB
   baseParams <- list(useGene = 'gene1',
                      useSamples = 1,
                      sample_effects = 1,
-                     guide_efficiency = c(1,1,1),
+                     guide_efficiency = NA,
                      user_DataObj = testDataObj,
                      user_ModelObj = testModelObj,
                      write_log = write_log)
