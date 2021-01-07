@@ -8,7 +8,7 @@
 ModelObj (R6Class).
 Contains:
 --  mean_var_model_params = "list",
---  guide_covar = "matrix",
+--  guide_features = "matrix",
 --  unobserved_infected_cell_values = "vector",
 --  mean_var_model = "integer",
 --  init_scaling = "vector",
@@ -29,7 +29,7 @@ specifications.  Computes sample scaling parameters, the vector of infected
 \describe{
 \item{\code{mean_var_model_params}}{Coefficients to use in mean-var model.}
 
-\item{\code{guide_covar}}{Matrix of by-guide features.}
+\item{\code{guide_features}}{Matrix of by-guide features.}
 
 \item{\code{master_freq_dt}}{Data.table of sgRNA frequencies in master libraries.}
 

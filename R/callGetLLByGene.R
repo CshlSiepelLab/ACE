@@ -77,11 +77,8 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
   if (is.na(guide_efficiency)) {
     gene_guide_efficiency <- rep(1, length(useGuideCounts))
   } else if (is.vector(guide_efficiency)) {
-    write_log('guide_eff is')
-    write_log(guide_efficiency)
     gene_guide_efficiency <- getGuideEfficiency(
-      guide_matrix = as.matrix(user_ModelObj$guide_features[useGuideCounts,.SD],
-                               ncol = ),
+      guide_matrix = as.matrix(user_ModelObj$guide_features[useGuideCounts,.SD]),
       feature_weight = guide_efficiency)
   } 
   
@@ -178,9 +175,9 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
     stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
-    x <- capture.output(debugArgList(checkArgList, argNames, printArgList = T))
-    write_log(x)
-    write_log('NA or inf ll returned!')
+    debugArgList(checkArgList, argNames, printArgList = T,
+                                     write_log)
+    write_log('NA or inf ll returned from callGetLLByGene!')
     return(-1e20)
   }
   return(ll)

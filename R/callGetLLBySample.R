@@ -31,13 +31,13 @@ callGetLLBySample <- function(sample_effect,
   
   # evaluate likelihood over relevant data subset.
   if (is.vector(use_genes)) {
-    useGuideCounts <- which(user_DataObj$guide2gene_map$gene %in% useGene)
+    useGuideCounts <- which(user_DataObj$guide2gene_map$gene %in% use_genes)
   } else if (is.na(use_genes)) {
     useGuideCounts <- 1:nrow(user_DataObj$guide2gene_map)
   } else {
     stop('Error: invalid gene subset argument.')
   }
-  if (any(sapply(list(useGuideCounts, use_samples), length) < 1)) {
+  if (any(sapply(list(useGuideCounts, use_sample), length) < 1)) {
     write_log('Error: Samples or guides not found.')
     write_log(useGuideCounts[1:10])
     write_log('at sample index')
@@ -66,8 +66,8 @@ callGetLLBySample <- function(sample_effect,
   # subset applicable count priors.
   masterlib <- NULL # local definition for auto-testing.
   hasGuidePrior <- user_ModelObj$guidePrior=='master_library'
-  if (hasPrior) {
-    if (ncol(userModelObj$master_freq_dt)==2) { # one masterlib for all.
+  if (hasGuidePrior) {
+    if (ncol(user_ModelObj$master_freq_dt)==2) { # one masterlib for all.
       masterlib_key <- 0
       gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[useGuides,2,
                                                                  with=F])
@@ -87,7 +87,7 @@ callGetLLBySample <- function(sample_effect,
       # data.table strips '.txt' from column names in ModelObj.
       use_master_samples <- sapply(use_master_samples, function(i) {
         strsplit(i, '.txt')[[1]]
-        })
+      })
       gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[useGuides,
                                                                  (use_master_samples),
                                                                  with=F])
@@ -99,7 +99,7 @@ callGetLLBySample <- function(sample_effect,
   # subset cells infected in this sample.
   subset_cells_infected <- user_DataObj$cells_infected[use_sample]
   
-  # Subset parameter arguments. 
+  # Subset guide & gene parameter arguments; only single sample parameter being optimized.
   if (is.na(guide_efficiency)) {
     gene_guide_efficiency <- rep(1, length(useGuideCounts))
   } else {
@@ -107,59 +107,58 @@ callGetLLBySample <- function(sample_effect,
       guide_matrix = as.matrix(user_ModelObj$guide_features[useGuideCounts,.SD]),
       feature_weight = guide_efficiency)
   }
-  subset_sample_effects <- sample_effects[[use_sample]]
-  if (!all(use_gene %in% names(gene_essentiality))) {
+  if (!all(use_genes %in% names(gene_effects))) {
     stop('Given gene essentiality does not contain all in use_gene.')
   } else {
-    guide_essentiality <- sapply(use_gene, function(g) {
-      rep(gene_essentiality[[g]], times = sum(user_DataObj$guide2gene_map$gene %in% g))
+    guide_essentiality <- sapply(use_genes, function(g) {
+      rep(gene_effects[[g]], times = sum(user_DataObj$guide2gene_map$gene %in% g))
     })
   }
   if (hasInit & hasGuidePrior) {
     argList <- list(guide_essentiality,
-                     gene_guide_efficiency,
-                     subset_sample_effects,
-                     gene_init_counts,
-                     gene_dep_counts,
-                     user_ModelObj$mean_var_model,
-                     gene_master_freq,
-                     masterlib_key,
-                     subset_cells_infected,
-                     subset_init_scaling, subset_dep_scaling,
-                     user_ModelObj$unobserved_infected_cell_values,
-                     unlist(user_ModelObj$mean_var_model_params),
-                     user_ModelObj$stepSize)
-                    argNames <- c('guide_essentiality',
-                                  'gene_guide_efficiency',
-                                  'subset_sample_effects',
-                                  'gene_init_counts',
-                                  'gene_dep_counts',
-                                  'user_ModelObj$mean_var_model',
-                                  'gene_master_freq',
-                                  'masterlib_key',
-                                  'subset_cells_infected',
-                                  'subset_init_scaling', 'subset_dep_scaling',
-                                  'user_ModelObj$unobserved_infected_cell_values',
-                                  'unlist(user_ModelObj$mean_var_model_params)',
-                                  'user_ModelObj$stepSize')
-                    # debugging inputs:
-                    # debugArgList(argList, argNames)
-                    ll <- do.call(getLL, argList)
-                    
+                    gene_guide_efficiency,
+                    sample_effect,
+                    gene_init_counts,
+                    gene_dep_counts,
+                    user_ModelObj$mean_var_model,
+                    gene_master_freq,
+                    masterlib_key,
+                    subset_cells_infected,
+                    init_scaling, subset_dep_scaling,
+                    user_ModelObj$unobserved_infected_cell_values,
+                    unlist(user_ModelObj$mean_var_model_params),
+                    user_ModelObj$stepSize)
+    argNames <- c('guide_essentiality',
+                  'gene_guide_efficiency',
+                  'sample_effect',
+                  'subset_init_counts',
+                  'gene_dep_counts',
+                  'user_ModelObj$mean_var_model',
+                  'gene_master_freq',
+                  'masterlib_key',
+                  'subset_cells_infected',
+                  'init_scaling', 'subset_dep_scaling',
+                  'user_ModelObj$unobserved_infected_cell_values',
+                  'unlist(user_ModelObj$mean_var_model_params)',
+                  'user_ModelObj$stepSize')
+    # debugging inputs:
+    # debugArgList(argList, argNames)
+    ll <- do.call(getLL, argList)
+    
   } else if (hasInit & !hasGuidePrior) {
     noMasterArgList <- list(guide_essentiality,
                             gene_guide_efficiency,
-                            subset_sample_effects,
+                            sample_effect,
                             gene_init_counts,
                             gene_dep_counts,
                             user_ModelObj$mean_var_model,
-                            subset_init_scaling, subset_dep_scaling,
+                            init_scaling, subset_dep_scaling,
                             user_ModelObj$unobserved_infected_cell_values,
                             unlist(user_ModelObj$mean_var_model_params),
                             user_ModelObj$stepSize)
     argNames <- c('guide_essentiality',
                   'gene_guide_efficiency',
-                  'subset_sample_effects',
+                  'sample_effect',
                   'gene_init_counts',
                   'gene_dep_counts',
                   'user_ModelObj$mean_var_model',
@@ -173,7 +172,7 @@ callGetLLBySample <- function(sample_effect,
   } else if (hasGuidePrior & !hasInit) {
     noInitArgList <- list(guide_essentiality,
                           gene_guide_efficiency,
-                          subset_sample_effects,
+                          sample_effect,
                           gene_dep_counts,
                           user_ModelObj$mean_var_model,
                           gene_master_freq,
@@ -185,7 +184,7 @@ callGetLLBySample <- function(sample_effect,
                           user_ModelObj$stepSize)
     argNames <- c('guide_essentiality',
                   'gene_guide_efficiency',
-                  'subset_sample_effects',
+                  'sample_effect',
                   'gene_dep_counts',
                   'user_ModelObj$mean_var_model',
                   'gene_master_freq',
@@ -201,7 +200,7 @@ callGetLLBySample <- function(sample_effect,
     stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
-    write_log('NA or inf ll returned!')
+    write_log('NA or inf ll returned from callGetLLBySample!')
     return(-1e20)
   }
   return(ll)

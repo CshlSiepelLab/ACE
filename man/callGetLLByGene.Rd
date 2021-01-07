@@ -36,7 +36,6 @@ callGetLLByGene(
 returns log likelihood of given parameters, given data in parent ModelObjClass.
 }
 \description{
-gets likelihood of gene/sample/guide parameters by calling RCpp functions
-getLL, etc..  Designed to be called for a single gene.
-Last updated December 2019.
+Calls Rcpp functions to evaluate the likelihood of a single GENE parameter
+given sample and guide parameters.  Assumes gene independence.
 }

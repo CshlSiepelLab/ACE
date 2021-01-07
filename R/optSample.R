@@ -18,8 +18,7 @@ optSample <- function(sample_effects,
                       write_log,
                       user_DataObj,
                       user_ModelObj) {
-  # placeholder
-  callGetLLBySample <- function()
+  
   # Check for empty input.
   if (length(sample_effects)==0 | any(is.na(sample_effects))) {
     write_log('Error: Initial sample effects submitted to optSample is empty or NA')

@@ -4,8 +4,10 @@
 #' @param argList List of args to check.
 #' @param argNames Names of specific arguments; default all.
 #' @param printArgList Boolean option to print argList.
+#' @param write_log Function to output to master log file.
 #' 
-debugArgList <- function(argList, argNames, printArgList = F){
+debugArgList <- function(argList, argNames, printArgList = F,
+                         write_log){
   isProblem <-F
   if (any(sapply(argList, function(i) any(is.na(unlist(i)))))) {
     isProblem <- T
@@ -32,10 +34,10 @@ debugArgList <- function(argList, argNames, printArgList = F){
       write(argList[[i]][1:10], file = outFile,
             append = T)
     }
-    save(argList, file = file.path('ACE_output_data',paste0('argList_', tStamp,'.RData')))
+    # save(argList, file = file.path('ACE_output_data',paste0('argList_', tStamp,'.RData')))
   }
   if (isProblem) {
-    write_log("NA's in argList, see", tStamp,"_argList.txt")
-    stop(cat("NA's in argList, see", tStamp,"_argList.txt"))
+    write_log("NA's in argList, see", outFile)
+    stop(cat("NA's in argList, see", outFile))
   }
 }
