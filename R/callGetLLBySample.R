@@ -27,7 +27,7 @@ callGetLLBySample <- function(sample_effect,
                               user_ModelObj,
                               write_log) {
   write_log('Called callGetLLBySample')
-  if (sample_effect < 0) sample_effect <- 0 # Prevent optim bug ignoring boundaries.
+  if (any(sample_effect < 0)) sample_effect <- 0 # Prevent optim bug ignoring boundaries.
   
   # evaluate likelihood over relevant data subset.
   if (is.vector(use_genes)) {
@@ -84,10 +84,6 @@ callGetLLBySample <- function(sample_effect,
         write_log(user_DataObj$sample_masterlib$sample[1:10])
         stop('Could not identify paired master library.')
       }
-      # data.table strips '.txt' from column names in ModelObj.
-      use_master_samples <- sapply(use_master_samples, function(i) {
-        strsplit(i, '.txt')[[1]]
-      })
       gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[useGuides,
                                                                  (use_master_samples),
                                                                  with=F])

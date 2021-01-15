@@ -21,7 +21,7 @@ getLfcDt(
 
 \item{isSim}{Boolean whether data counts simulated; if so, true phi in name.}
 
-\item{use_base_counts}{Depleted count -matched data.table to use as the
+\item{use_base_counts}{Depleted-count-matched data.table to use as the
 denominator for fold change.}
 
 \item{use_samples}{Default NA, return results for only a sample subset.}

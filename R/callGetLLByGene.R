@@ -42,33 +42,43 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
   depSampleNames <- names(user_DataObj$dep_counts)[useSamples]
 
   # If hasGuidePrior, model with poisson distribution of by-guide prior in master_freq.
-  # DON'T expand master_freq into a matrix guides x samples;
-  # give masterlibrary of just useGuides and unique(masterlib[depSampleNames]),
-  # with masterlib_key of length samples indicating which idx of master_freq to use.
+  # Give masterlibrary frequencies subset to relevant libraries,
+  # with masterlib_key of length samples indicating which idx of master_freq to use,
+  # corresponding to the order of the samples in dep_counts.
   # sgrna idx column of masterlib not submitted
-  masterlib <- NULL # locally define for auto-testing.
+  
+  # locally define for auto-testing.
+  masterlib <- NULL 
+  sgrna <- NULL
+  
   if (hasGuidePrior) {
     if (ncol(user_ModelObj$master_freq_dt)==2) {
       masterlib_key <- rep(0, length(depSampleNames))
-      gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[useGuides, 2,
+      gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[match(useGuides, sgrna),
+                                                                 2,
                                                                  with=F])
     } else {
-      useMasterSamples <- user_DataObj$sample_masterlib[sample %in% depSampleNames,
-                                                        unique(masterlib)]
-      masterlib_key <- unlist(sapply(user_DataObj$sample_masterlib[sample %in% depSampleNames,
-                                                                   masterlib],
-                                     function(i) which(useMasterSamples %in% i))) - 1 # base 0 in Cpp.
-    if (length(useMasterSamples) < 1) {
-      write_log('masterlib not found')
-      write_log(useMasterSamples[1:10])
-      write_log(user_DataObj$sample_masterlib[1:10])
-      stop('Could not identify paired master library.')
-    }
-    # data.table strips '.txt' from column names somewhere in MOdelobj.
-    useMasterSamples <- sapply(useMasterSamples, function(i) strsplit(i, '.txt')[[1]])
-    gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[useGuides,
-                                                               (useMasterSamples),
-                                                               with=F])
+      useMasterSamples <- unique(user_DataObj$sample_masterlib[sample %in% depSampleNames,
+                                                               masterlib])
+      masterlib_key <- sapply(depSampleNames, function(s) {
+        which(useMasterSamples == user_DataObj$sample_masterlib[sample==s,
+                                                                masterlib]) - 1 # 0-based Cpp.
+      })
+     
+      if (length(useMasterSamples) < 1) {
+        write_log('masterlib not found')
+        write_log(useMasterSamples[1:10])
+        write_log(user_DataObj$sample_masterlib[1:10])
+        stop('Could not identify paired master library.')
+      }
+      if (useMasterSamples[masterlib_key[1]+1] != 
+          user_DataObj$sample_masterlib[sample==depSampleNames[1], masterlib]){
+        stop('Incorrectly subset master library.')
+      }
+
+      gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[match(useGuides, sgrna),
+                                                                 (useMasterSamples),
+                                                                 with=F])
     }
     subset_cells_infected <- user_DataObj$cells_infected[useSamples]
   }
@@ -176,7 +186,7 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
   }
   if (is.na(ll) | is.infinite(ll)) {
     debugArgList(checkArgList, argNames, printArgList = T,
-                                     write_log)
+                 write_log)
     write_log('NA or inf ll returned from callGetLLByGene!')
     return(-1e20)
   }

@@ -107,6 +107,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
   guide_essentiality <- rep(1, nrow(user_DataObj$dep_counts))
   sampleSubsets <- list("all"=1:ncol(user_DataObj$dep_counts))
   startEss <- rep(1, length(geneList))
+  names(startEss) <- geneList
   gene_essentiality <- startEss
   sample_effects <- rep(1, ncol(user_DataObj$dep_counts))
   if (is.vector(user_ModelObj$test_sample_subtype_cols, mode='integer')) {
@@ -157,7 +158,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
       } else {
         optGuideObj <- optSampleObj # just a pointer, not a clone.
       }
-      # update gene efficiency estimates based on sample and guide effects.
+      # update gene efficiency estimates based on sample and guide effects,
+      # for all sample subsets.
       optFgObj <- optFg(optFgObj$gene_effects, 
                         sampleSubsets, 
                         optSampleObj$sample_effects,

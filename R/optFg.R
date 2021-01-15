@@ -44,7 +44,7 @@ optFg <- function(startEss, sampleSubsets, sample_effects,
       gene <- geneList[[gene_idx]]
       write_log(c("optimizing parameters for gene: ", gene, '\n'))
       optimOut <- capture.output(
-        optObjList[[names(sampleSubsets)[subset]]][[gene]] <- optim(par = startEss[gene],
+        optObjList[[names(sampleSubsets)[subset]]][[gene]] <- optim(par = startEss[[gene]],
                                                                     fn = callGetLLByGene,
                                                                     useGene = gene,
                                                                     useSamples = sampleSubsets[[subset]],

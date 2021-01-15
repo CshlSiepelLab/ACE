@@ -227,8 +227,11 @@ ModelObj <- R6Class("ModelObj",
                             private$write_log(c("No samples matching the test subtype found in count data;",
                                               "no differential essentiality calculated."))
                           } else if (length(test_sample_idx)==ncol(user_DataObj$dep_counts)) {
-                            message('All samples in count data match the test subtype; no differential essentiality calculated.')
-                            private$write_log('All samples in count data match the test subtype; no differential essentiality calculated.')
+                            message(paste0('All samples in count data match the test subtype;',
+                                           ' no differential essentiality calculated.'))
+                            private$write_log(paste0('All samples in count data ',
+                                                     'match the test subtype;',  
+                                                     'no differential essentiality calculated.'))
                           } else {
                             self$test_sample_subtype_cols <- test_sample_idx
                             message("Using the following number of samples as our test set:")
@@ -266,8 +269,9 @@ ModelObj <- R6Class("ModelObj",
                                                                             median((0.5+user_DataObj$init_counts[[i]])/
                                                                                      guideMeans[i]))]
                           self$master_freq_dt<-data.table('sgrna' = user_DataObj$guide2gene_map$sgrna,
-                                                          'meanFreq' = rowMeans(normCounts[,log(.SD)]-
-                                                                                  user_DataObj$init_counts[,log(colSums(0.5+.SD))]))
+                                                          'meanFreq' = rowMeans(
+                                                            normCounts[,log(.SD)]-
+                                                              user_DataObj$init_counts[,log(colSums(0.5+.SD))]))
                           setkey(self$master_freq_dt, sgrna)
                           self$guidePrior <- 'mean_initial'
                         } else {
@@ -285,10 +289,33 @@ ModelObj <- R6Class("ModelObj",
                                              sep = '')[[1]]
                           private$write_log('treating negative control file as single column.')
                           private$write_log(head(neg_ctrls))
+                          depSampleNames <- names(user_DataObj$dep_counts)
+                          if (is.data.table(user_DataObj$init_counts)) {
+                            use_base_counts <- user_DataObj$init_counts 
+                          } else {
+                            if (ncol(self$master_freq_dt)==2) {
+                              useMasterSamples <- names(self$master_freq_dt)[2]
+                            } else {
+                              useMasterSamples <- sapply(depSampleNames, function(i) {
+                                user_DataObj$sample_masterlib[sample == i, masterlib]
+                              })
+                              if (useMasterSamples[1] != 
+                                user_DataObj$sample_masterlib[sample==depSampleNames[1], 
+                                                              masterlib]){
+                                stop('Incorrectly subset masterlibrary.')
+                              }
+                            }
+                            use_base_counts <- self$master_freq_dt[
+                              match(user_DataObj$guide2gene_map$sgrna, sgrna),.SD, 
+                              .SDcols = useMasterSamples]                           
+                          }
+                          # get lfc for all genes.
                           avgNeg <- getLfcDt(user_DataObj = user_DataObj,
                                              getCI=F,
                                              isSim = F,
+                                             use_base_counts = use_base_counts,
                                              write_log = private$write_log)
+                          message('Removed negative controls more than one SD from mean LFC.')
                           sdNeg <- sd(avgNeg[gene %in% neg_ctrls, score])
                           medNeg <- median(avgNeg[gene %in% neg_ctrls, score])
                           useNeg <- avgNeg[gene %in% neg_ctrls &

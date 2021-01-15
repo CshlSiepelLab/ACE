@@ -6,7 +6,7 @@
 #' counts to 1e7 reads per sample. Returns log2 of dep/init ratio.
 #' @param user_DataObj DataObj to analyze.
 #' @param isSim Boolean whether data counts simulated; if so, true phi in name.
-#' @param use_base_counts Depleted count -matched data.table to use as the
+#' @param use_base_counts Depleted-count-matched data.table to use as the
 #' denominator for fold change.
 #' @param use_samples Default NA, return results for only a sample subset.
 #' @param getCI Default true, return confidence intervals per phi.  Sim only.
@@ -44,24 +44,30 @@ getLfcDt <- function(user_DataObj,
     } else {
       stop('provide master library or init counts as base_counts argument')
     }
-  } else if (ncol(use_base_counts) != ncol(user_DataObj$dep_counts)) {
-    if (subset_base) {
-      if (ncol(use_base_counts)==1) {
-        use_base_counts <- as.data.table(rep(use_base_counts[[1]],
-                                             ncol(user_DataObj$dep_counts)))
-        use_samples_init <- use_samples
-      } else if (subset_base) stop('incorrect dimensions of submitted base counts to use shared subsetting.')
-      else if (length(use_samples)!=ncol(use_base_counts)) {
-        stop('Initial and final samples must be paired for fold change calculation.')
-      }
-    } else {
-      # expected for masterlib-depletion libraries.
-     use_samples_init <- 1:ncol(use_base_counts)
-    }
-  } else if (subset_base) {
-    use_samples_init <- use_samples
   } else {
-    use_samples_init <- 1:ncol(use_base_counts)
+    if (nrow(user_DataObj$dep_counts) != nrow(use_base_counts) |
+        nrow(use_base_counts) != nrow(user_DataObj$guide2gene_map)) {
+      stop('use_base_counts has different guides than dep_counts')
+    }
+    if (ncol(use_base_counts) != ncol(user_DataObj$dep_counts)) {
+      if (subset_base) {
+        if (ncol(use_base_counts)==1) {
+          use_base_counts <- as.data.table(rep(use_base_counts[[1]],
+                                               ncol(user_DataObj$dep_counts)))
+          use_samples_init <- use_samples
+        } else if (subset_base) stop('incorrect dimensions of submitted base counts to use shared subsetting.')
+        else if (length(use_samples) != ncol(use_base_counts)) {
+          stop('Initial and final samples must be paired for fold change calculation.')
+        }
+      } else {
+        # expected for masterlib-depletion libraries.
+        use_samples_init <- 1:ncol(use_base_counts)
+      }
+    } else if (subset_base) {
+      use_samples_init <- use_samples
+    } else {
+      use_samples_init <- 1:ncol(use_base_counts)
+    }
   }
   init_counts <- use_base_counts[, (use_samples_init), with=F]
   dep_counts <- user_DataObj$dep_counts[, (use_samples), with=F]
