@@ -4,7 +4,7 @@
 \alias{debugArgList}
 \title{Function debugArgList}
 \usage{
-debugArgList(argList, argNames, printArgList = F, write_log)
+debugArgList(argList, argNames, printArgList = F)
 }
 \arguments{
 \item{argList}{List of args to check.}
@@ -12,8 +12,6 @@ debugArgList(argList, argNames, printArgList = F, write_log)
 \item{argNames}{Names of specific arguments; default all.}
 
 \item{printArgList}{Boolean option to print argList.}
-
-\item{write_log}{Function to output to master log file.}
 }
 \description{
 Check for illegal argument values.

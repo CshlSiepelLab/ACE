@@ -91,7 +91,7 @@ test_that('Create a ModelObj with data with one blank guide.', {
                            testModelObj$dep_scaling))))
   expect_true(all(sapply(c(testModelObj$init_scaling,
                            testModelObj$dep_scaling), length) == 1))
-  expect_output(testResObj <- optimizeModelParameters(testDataObjAll, testModelObj))
+  expect_message(testResObj <- optimizeModelParameters(testDataObjAll, testModelObj))
   expect_equal(F, is.na(testResObj$gene_results$fit_gene_param))
 })
 

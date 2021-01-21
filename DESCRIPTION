@@ -12,7 +12,9 @@ Imports:
     plyr,
     stringr,
     stats,
-    Rcpp
+    Rcpp,
+    devtools,
+    parallel
 LinkingTo: Rcpp
 Collate:
     'DataObjClass.R'

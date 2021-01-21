@@ -12,7 +12,8 @@ optFg(
   geneList,
   write_log,
   user_DataObj,
-  user_ModelObj
+  user_ModelObj,
+  ncpus = NA
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ optFg(
 \item{user_DataObj}{DataObject containing count data to analyze.}
 
 \item{user_ModelObj}{ModelObject with pre-processed model parameters.}
+
+\item{ncpus}{Number of threads to use in parallel optimization; if not 
+specified, will be auto-detected.}
 }
 \description{
 Function optFg: By-gene essentiality optimization.

@@ -11,7 +11,8 @@ optimizeModelParameters(
   fit_guide_param = F,
   subset_genes = NA,
   converge_ll = 100,
-  max_iter = 10
+  max_iter = 10,
+  ncpus = NA
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ optimizeModelParameters(
 \item{converge_ll}{Tolerated variation in likelihood to end optimization; default 100.}
 
 \item{max_iter}{Maximum number of optimization iterations, regardless of convergence. Default 10.}
+
+\item{ncpus}{Number of threads to use in parallel optimization; auto-detected if not specified.}
 }
 \value{
 Data.table with Gene name, optimized essentiality,  guide_efficiency, sample_response,

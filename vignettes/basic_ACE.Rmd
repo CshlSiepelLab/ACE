@@ -118,7 +118,8 @@ newModelObj <- ModelObj$new(user_DataObj = newDataObj,
                             test_samples='test',
                             use_master_library = T)
 newResultsObj <- optimizeModelParameters(user_DataObj = newDataObj,
-                                         user_ModelObj = newModelObj)
+                                         user_ModelObj = newModelObj,
+                                         ncpus = 1)
 writeResObj(newResultsObj)
 ```
                                           

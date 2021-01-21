@@ -10,22 +10,21 @@
 #' @param guide_efficiency Numeric vector of guide efficiency parameters.
 #' @param user_DataObj DataObj class;
 #' @param user_ModelObj ModelObj class.
-#' @param write_log Function with time-stamped file to output messages.
 #' @return returns log likelihood of given parameters, given data in parent ModelObjClass.
 #' @export
 callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
                             guide_efficiency,
-                            user_DataObj, user_ModelObj, write_log) {
-  write_log('called callGetLLByGene')
-  if (geneEss < 0) geneEss <- 0
+                            user_DataObj, user_ModelObj){
+  print('called callGetLLByGene')
+  if (geneEss < 0) geneEss <- 0 # Boundaries set from 0 to infinity, but optim oversteps.
 
   # get order of rows corresponding to gene in count data.
   useGuideCounts <- which(user_DataObj$guide2gene_map$gene == useGene)
   if (any(sapply(list(useGuideCounts, useSamples), length) < 1)) {
-    write_log('samples or guides not found.')
-    write_log(useGuideCounts[1:10])
-    write_log('useSamples')
-    write_log(useSamples)
+    print('samples or guides not found.')
+    print(useGuideCounts[1:10])
+    print('useSamples')
+    print(useSamples)
     stop('error in optimizeModelParams: genes or samples not found.')
   }
   useGuides <- user_DataObj$guide2gene_map$sgrna[useGuideCounts]
@@ -66,9 +65,9 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
       })
      
       if (length(useMasterSamples) < 1) {
-        write_log('masterlib not found')
-        write_log(useMasterSamples[1:10])
-        write_log(user_DataObj$sample_masterlib[1:10])
+        print('masterlib not found')
+        print(useMasterSamples[1:10])
+        print(user_DataObj$sample_masterlib[1:10])
         stop('Could not identify paired master library.')
       }
       if (useMasterSamples[masterlib_key[1]+1] != 
@@ -185,9 +184,8 @@ callGetLLByGene <- function(geneEss, useGene, useSamples, sample_effects,
     stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
-    debugArgList(checkArgList, argNames, printArgList = T,
-                 write_log)
-    write_log('NA or inf ll returned from callGetLLByGene!')
+    debugArgList(checkArgList, argNames, printArgList = T)
+    print('NA or inf ll returned from callGetLLByGene!')
     return(-1e20)
   }
   return(ll)

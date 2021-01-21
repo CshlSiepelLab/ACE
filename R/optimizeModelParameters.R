@@ -19,6 +19,7 @@
 #' @param subset_genes optional list of start & end points of gene indices to subset.
 #' @param converge_ll Tolerated variation in likelihood to end optimization; default 100.
 #' @param max_iter Maximum number of optimization iterations, regardless of convergence. Default 10.
+#' @param ncpus Number of threads to use in parallel optimization; auto-detected if not specified.
 #' @return Data.table with Gene name, optimized essentiality,  guide_efficiency, sample_response,
 #'          guide_covariates, gene_essentiality likelihood, gene_ess CI (hessian),; one DT each for
 #'          "all", "test", and "control" conditions, and an optional 4th for differential depletion
@@ -30,7 +31,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
                                     fit_guide_param = F,
                                     subset_genes = NA,
                                     converge_ll = 100,
-                                    max_iter = 10) {
+                                    max_iter = 10,
+                                    ncpus = NA) {
   # Set local definitions to prevent R check note due to data.table syntax.
   test_fit <- NULL
   ctrl_fit <- NULL
@@ -121,7 +123,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
   optFgObj <- optFg(startEss, sampleSubsets, sample_effects,
                     guide_efficiency, geneList[subsetG], write_log,
                     user_DataObj = user_DataObj,
-                    user_ModelObj = user_ModelObj)
+                    user_ModelObj = user_ModelObj,
+                    ncpus = ncpus)
   message('Initial by-gene parameter optimization complete')
   optObjList <- optFgObj[[1]]
   nullLogLikeList <- optFgObj[[2]] 
@@ -166,7 +169,8 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
                         optGuideObj$guide_efficiency, 
                         geneList[subsetG], write_log,
                         user_DataObj = user_DataObj,
-                        user_ModelObj = user_ModelObj)
+                        user_ModelObj = user_ModelObj,
+                        ncpus = ncpus)
       iterNum <- iterNum + 1
       
       # Exit conditions.

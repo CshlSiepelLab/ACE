@@ -1,6 +1,7 @@
 context("Testing Parameter Optimization")
 library(ACER)
 setup({
+  Sys.setenv('R_TESTS'='') # i386 LoadLibrary failure in R CMD check.
   write.table(data.table('guide' = paste0('g', 1),
                          'gene' = c('gene1'),
                          'dep_1' = c(0),
@@ -85,33 +86,17 @@ test_that('Negative and positive ess values should not be accepted by callGetLLB
   
   # callGetLLByGene not meant to be called outside of the ResObj;
   # manually creating resObj.
-  if (!dir.exists('ACE_output_data')) dir.create('ACE_output_data')
-  tStamp <- paste(unlist(str_split(Sys.time(), ' |:')), collapse='_')
-  log_file <- file(file.path('ACE_output_data',
-                             paste0('test_callGetLLByGene_log_', tStamp)),
-                   open='w+')
-  on.exit(close(log_file))
-  write_log <- function(message_vector) {
-    if (is.atomic(message_vector)) {
-      cat(message_vector,'\n', file=log_file, append=T)
-    } else {
-      suppressWarnings(write.table(message_vector, file = log_file, 
-                                   col.names=T, append=T))
-    } 
-  }
-  
   baseParams <- list(useGene = 'gene1',
                      useSamples = 1,
                      sample_effects = 1,
                      guide_efficiency = NA,
                      user_DataObj = testDataObj,
-                     user_ModelObj = testModelObj,
-                     write_log = write_log)
-  # expect no warning messages, which are passed outside the log file.
-  res1 <- do.call(callGetLLByGene, append(list('geneEss' = 1), baseParams))
-  res2 <- do.call(callGetLLByGene, append(list('geneEss' = 0), baseParams))
-  res3 <- do.call(callGetLLByGene, append(list('geneEss' = -1), baseParams))
-  res4 <- do.call(callGetLLByGene, append(list('geneEss' = 2), baseParams))
+                     user_ModelObj = testModelObj)
+  # expect no warning messages outside the log file.
+  .log1 <- capture_output(res1 <- do.call(callGetLLByGene, append(list('geneEss' = 1), baseParams)))
+  .log2 <- capture_output(res2 <- do.call(callGetLLByGene, append(list('geneEss' = 0), baseParams)))
+  .log3 <- capture_output(res3 <- do.call(callGetLLByGene, append(list('geneEss' = -1), baseParams)))
+  .log4 <- capture_output(res4 <- do.call(callGetLLByGene, append(list('geneEss' = 2), baseParams)))
   # expect values returned to be the same at and below/above the lower/upper
   # boundaries, respectively.
   expect_equal(res2, res3)

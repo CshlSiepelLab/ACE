@@ -17,16 +17,16 @@
 #' @param use_sample Sample index corresponding to sample_effect.
 #' @param user_DataObj DataObject with experimental data to analyze.
 #' @param user_ModelObj ModelObject with preprocessed model parameters.
-#' @param write_log Function to output messages to time-stamped file.
+# @param write_log Function to output messages to time-stamped file.
 callGetLLBySample <- function(sample_effect,
                               gene_effects,
                               use_genes = NA,
                               use_sample,
                               guide_efficiency,
                               user_DataObj,
-                              user_ModelObj,
-                              write_log) {
-  write_log('Called callGetLLBySample')
+                              user_ModelObj) {
+                              # write_log) {
+  print('Called callGetLLBySample')
   if (any(sample_effect < 0)) sample_effect <- 0 # Prevent optim bug ignoring boundaries.
   
   # evaluate likelihood over relevant data subset.
@@ -38,10 +38,10 @@ callGetLLBySample <- function(sample_effect,
     stop('Error: invalid gene subset argument.')
   }
   if (any(sapply(list(useGuideCounts, use_sample), length) < 1)) {
-    write_log('Error: Samples or guides not found.')
-    write_log(useGuideCounts[1:10])
-    write_log('at sample index')
-    write_log(use_sample)
+    print('Error: Samples or guides not found.')
+    print(useGuideCounts[1:10])
+    print('at sample index')
+    print(use_sample)
     stop('Samples or guides not found.')
   }
   
@@ -78,10 +78,10 @@ callGetLLBySample <- function(sample_effect,
                                                                    masterlib],
                                      function(i) which(use_master_samples %in% i))) - 1 # base 0 in Cpp.
       if (length(use_master_samples) < 1) {
-        write_log('Masterlib not found')
-        write_log(dep_sample_name)
-        write_log(use_master_samples[1:10])
-        write_log(user_DataObj$sample_masterlib$sample[1:10])
+        print('Masterlib not found')
+        print(dep_sample_name)
+        print(use_master_samples[1:10])
+        print(user_DataObj$sample_masterlib$sample[1:10])
         stop('Could not identify paired master library.')
       }
       gene_master_freq <- as.matrix(user_ModelObj$master_freq_dt[useGuides,
@@ -196,7 +196,7 @@ callGetLLBySample <- function(sample_effect,
     stop('invalid experimental design. Must have master/init and depleted sets.')
   }
   if (is.na(ll) | is.infinite(ll)) {
-    write_log('NA or inf ll returned from callGetLLBySample!')
+    print('NA or inf ll returned from callGetLLBySample!')
     return(-1e20)
   }
   return(ll)

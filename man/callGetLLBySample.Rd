@@ -11,8 +11,7 @@ callGetLLBySample(
   use_sample,
   guide_efficiency,
   user_DataObj,
-  user_ModelObj,
-  write_log
+  user_ModelObj
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ callGetLLBySample(
 \item{user_DataObj}{DataObject with experimental data to analyze.}
 
 \item{user_ModelObj}{ModelObject with preprocessed model parameters.}
-
-\item{write_log}{Function to output messages to time-stamped file.}
 }
 \description{
 Calls Rcpp functions to evaluate the likelihood of a single SAMPLE parameter
