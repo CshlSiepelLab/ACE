@@ -13,7 +13,6 @@ Imports:
     stringr,
     stats,
     Rcpp,
-    devtools,
     parallel
 LinkingTo: Rcpp
 Collate:
