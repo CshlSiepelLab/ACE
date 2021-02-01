@@ -15,6 +15,8 @@
 #' @param subset_base Boolean default true; should use_base_counts be subset by
 #' use_samples?
 #' @param write_log Function to output log file.
+#' @param neg_ctrl_file Name of file containing gene names to use as negative
+#' controls.  Optional; default is file used by user_DataObj.
 #' @export
 getLfcDt <- function(user_DataObj, 
                      isSim,
@@ -24,7 +26,8 @@ getLfcDt <- function(user_DataObj,
                      lfcFileName='lfc', 
                      writeFile = F,
                      subset_base=T,
-                     write_log) {
+                     write_log,
+                     neg_ctrl_file = NA) {
   # Set local definitions to prevent R check note due to data.table syntax.
   masterlib <- NULL
   gene <- NULL
@@ -33,7 +36,9 @@ getLfcDt <- function(user_DataObj,
   score <- NULL
   
   genes <- user_DataObj$guide2gene_map$gene
-  neg_ctrl_file <- user_DataObj$neg_control_file
+  if (is.na(neg_ctrl_file)) {
+    neg_ctrl_file <- user_DataObj$neg_control_file # may still be NA.
+  }
   if (any(is.na(use_samples))) use_samples <- 1:ncol(user_DataObj$dep_counts)
   if (any(is.na(use_base_counts))) {
     if (is.data.table(user_DataObj$init_counts)) {
@@ -52,16 +57,28 @@ getLfcDt <- function(user_DataObj,
     if (ncol(use_base_counts) != ncol(user_DataObj$dep_counts)) {
       if (subset_base) {
         if (ncol(use_base_counts)==1) {
-          use_base_counts <- as.data.table(rep(use_base_counts[[1]],
-                                               ncol(user_DataObj$dep_counts)))
+          message('One reference sample')
+          use_base_counts <- use_base_counts[, rep(1,
+                                                   ncol(user_DataObj$dep_counts)),
+                                             with=F]
           use_samples_init <- use_samples
         } else if (subset_base) stop('incorrect dimensions of submitted base counts to use shared subsetting.')
         else if (length(use_samples) != ncol(use_base_counts)) {
           stop('Initial and final samples must be paired for fold change calculation.')
         }
       } else {
-        # expected for masterlib-depletion libraries.
-        use_samples_init <- 1:ncol(use_base_counts)
+        # base counts NOT the same dim as dep counts,
+        # and subset_base is false.
+        # expected for masterlib-depletion libraries with one master library.
+        if (ncol(use_base_counts)==1) {
+          message('One reference sample')
+          use_base_counts <- as.data.table(rep(use_base_counts[[1]],
+                                               ncol(user_DataObj$dep_counts)))
+          use_samples_init <- 1:ncol(use_base_counts)
+        } else {
+          message(head(use_base_counts))
+          stop('Incorrect number of columns in use_base_counts arg.')
+        }
       }
     } else if (subset_base) {
       use_samples_init <- use_samples
@@ -84,7 +101,9 @@ getLfcDt <- function(user_DataObj,
   avg_lfc <- data.table("gene" = genes,
                         "raw_avg_lfc" = rowMeans(lfc_dt))
   if (!is.na(neg_ctrl_file)) {
-    neg_ctrl_genes <- fread(neg_ctrl_file)[[1]]
+    neg_ctrl_genes <- fread(neg_ctrl_file,
+                            header = F,
+                            sep='')[[1]]
     if (sum(avg_lfc$gene %in% neg_ctrl_genes) > 0) {
       neg_ctrl_lfc <- avg_lfc[gene %in% neg_ctrl_genes, mean(raw_avg_lfc)]
     } else {
@@ -124,5 +143,6 @@ getLfcDt <- function(user_DataObj,
       gene_avg_lfc[, "CI_upper" := sort(score)[round(.9 *.N)], by=true_gene_param]
     }
   }
-  return(gene_avg_lfc)
+  return(list('gene_avg_lfc' = gene_avg_lfc,
+              'lfc_dt' = lfc_dt))
 }

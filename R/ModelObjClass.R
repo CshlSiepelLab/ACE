@@ -287,6 +287,7 @@ ModelObj <- R6Class("ModelObj",
                           # keep only controls with a LFC within 1 standard deviation of the median.
                           neg_ctrls <- fread(user_DataObj$neg_control_file, header =F,
                                              sep = '')[[1]]
+                          neg_ctrls <- sapply(neg_ctrls, function(n) str_replace_all(n, '\"', ''))
                           private$write_log('treating negative control file as single column.')
                           private$write_log(head(neg_ctrls))
                           depSampleNames <- names(user_DataObj$dep_counts)
@@ -314,13 +315,14 @@ ModelObj <- R6Class("ModelObj",
                                              getCI=F,
                                              isSim = F,
                                              use_base_counts = use_base_counts,
-                                             write_log = private$write_log)
+                                             write_log = private$write_log)$gene_avg_lfc
                           message('Removed negative controls more than one SD from mean LFC.')
                           sdNeg <- sd(avgNeg[gene %in% neg_ctrls, score])
                           medNeg <- median(avgNeg[gene %in% neg_ctrls, score])
                           useNeg <- avgNeg[gene %in% neg_ctrls &
                                              abs(score - medNeg) < sdNeg, gene]
                           self$neg_ctrls <- unique(useNeg)
+                          message(uniqueN(useNeg), ' Negative Controls Used.')
 
                         } else {
                           message('No negative controls will be used.')
