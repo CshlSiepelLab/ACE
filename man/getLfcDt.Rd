@@ -13,7 +13,8 @@ getLfcDt(
   lfcFileName = "lfc",
   writeFile = F,
   subset_base = T,
-  write_log
+  write_log,
+  neg_ctrl_file = NA
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ denominator for fold change.}
 use_samples?}
 
 \item{write_log}{Function to output log file.}
+
+\item{neg_ctrl_file}{Name of file containing gene names to use as negative
+controls.  Optional; default is file used by user_DataObj.}
 }
 \description{
 Takes geometric average across all guides and samples applying to a gene.
