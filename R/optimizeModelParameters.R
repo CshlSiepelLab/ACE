@@ -177,7 +177,7 @@ optimizeModelParameters <- function(user_DataObj, user_ModelObj,
       delta_ll <- abs(old_likelihood_estimate - sum(optObjList$gene_results$ll))
       
       if (iterNum == max_iter | delta_ll < converge_ll) {
-        write_log('Exit conditions met, converged: ', delta_ll < converge_ll)
+        write_log(paste0('Exit conditions met, converged: ', delta_ll < converge_ll))
         continueOptimizing <- F
       }
     }

@@ -40,6 +40,9 @@ getLfcDt <- function(user_DataObj,
     neg_ctrl_file <- user_DataObj$neg_control_file # may still be NA.
   }
   if (any(is.na(use_samples))) use_samples <- 1:ncol(user_DataObj$dep_counts)
+  if (!all(use_samples %in% 1:ncol(user_DataObj$dep_counts))) {
+    stop('Invalid sample index in use_samples argument.')
+  }
   if (any(is.na(use_base_counts))) {
     if (is.data.table(user_DataObj$init_counts)) {
       message('Using initial counts in calculation of LFC.')
@@ -50,40 +53,31 @@ getLfcDt <- function(user_DataObj,
       stop('provide master library or init counts as base_counts argument')
     }
   } else {
+    # check number of genes match.
     if (nrow(user_DataObj$dep_counts) != nrow(use_base_counts) |
         nrow(use_base_counts) != nrow(user_DataObj$guide2gene_map)) {
       stop('use_base_counts has different guides than dep_counts')
     }
-    if (ncol(use_base_counts) != ncol(user_DataObj$dep_counts)) {
-      if (subset_base) {
-        if (ncol(use_base_counts)==1) {
-          message('One reference sample')
-          use_base_counts <- use_base_counts[, rep(1,
-                                                   ncol(user_DataObj$dep_counts)),
-                                             with=F]
-          use_samples_init <- use_samples
-        } else if (subset_base) stop('incorrect dimensions of submitted base counts to use shared subsetting.')
-        else if (length(use_samples) != ncol(use_base_counts)) {
-          stop('Initial and final samples must be paired for fold change calculation.')
-        }
-      } else {
-        # base counts NOT the same dim as dep counts,
-        # and subset_base is false.
-        # expected for masterlib-depletion libraries with one master library.
-        if (ncol(use_base_counts)==1) {
-          message('One reference sample')
-          use_base_counts <- as.data.table(rep(use_base_counts[[1]],
-                                               ncol(user_DataObj$dep_counts)))
-          use_samples_init <- 1:ncol(use_base_counts)
-        } else {
-          message(head(use_base_counts))
-          stop('Incorrect number of columns in use_base_counts arg.')
-        }
-      }
-    } else if (subset_base) {
-      use_samples_init <- use_samples
-    } else {
+    # check number of samples match given subsetting arguments.
+    # Case 1: use_samples and use_base_counts match up, and subset_base==F
+    # (no column reordering of reference to match use_samples)
+    # Case 2: subset_base==T, and use_samples works for use_base_counts.
+    # Case 3: use_base_counts is a single column, and needs to be duplicated.
+    # Case 4: error.
+    if (!subset_base & length(use_samples)==ncol(use_base_counts)) {
+      use_base_counts <- use_base_counts
       use_samples_init <- 1:ncol(use_base_counts)
+    } else if (subset_base & all(use_samples %in% 1:ncol(use_base_counts))) {
+     use_base_counts <- use_base_counts
+     use_samples_init <- use_samples
+    } else if (ncol(use_base_counts)==1) {
+      message('One reference sample; matching to depleted counts.')
+      use_base_counts <- use_base_counts[, rep(1, length(use_samples)),
+                                         with=F]
+      use_samples_init <- 1:ncol(use_base_counts)
+    } else {
+      message('Dimensions of use_base_counts:', dim(use_base_counts))
+      stop('Incorrect number of columns in use_base_counts arg.')     
     }
   }
   init_counts <- use_base_counts[, (use_samples_init), with=F]

@@ -30,9 +30,9 @@ callGetLLBySample <- function(sample_effect,
   if (any(sample_effect < 0)) sample_effect <- 0 # Prevent optim bug ignoring boundaries.
   
   # evaluate likelihood over relevant data subset.
-  if (is.vector(use_genes)) {
+  if (is.vector(use_genes) & !any(is.na(use_genes))) {
     useGuideCounts <- which(user_DataObj$guide2gene_map$gene %in% use_genes)
-  } else if (is.na(use_genes)) {
+  } else if (any(is.na(use_genes))) {
     useGuideCounts <- 1:nrow(user_DataObj$guide2gene_map)
   } else {
     stop('Error: invalid gene subset argument.')
@@ -47,7 +47,7 @@ callGetLLBySample <- function(sample_effect,
   
   # subset count data.
   useGuides <- user_DataObj$guide2gene_map$sgrna[useGuideCounts]
-  hasInit <- is.vector(user_ModelObj$init_scaling)
+  hasInit <- !any(is.na(user_ModelObj$init_scaling))
   if (hasInit) {
     gene_init_counts <- as.matrix(user_DataObj$init_counts[useGuideCounts,
                                                            (use_sample),

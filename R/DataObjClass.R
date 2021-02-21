@@ -91,7 +91,6 @@ DataObj <- R6Class("DataObj",
                          }
                        }
                        
-                       
                        # Read optional guide and sample information files
                        if (!is.na(guideCovarFile)) {
                          guide_covars <- fread(guideCovarFile)
@@ -104,25 +103,33 @@ DataObj <- R6Class("DataObj",
                                             may add more covariates later.")
                          }
                        }
-                       # have semicolon-delimited 2nd column, with sample anntations.
+                       # have comma-delimited 2nd column, with sample annotations.
                        if (!is.na(sampleInfoFile)) {
-                         rawSampleInfo <- tryCatch(fread(sampleInfoFile),
+                         tryCatch(rawSampleInfo <- fread(sampleInfoFile, header=T),
                                                    warning = function(i) simpleError('Invalid sampleInfoFile'))
-                         
-                         if (ncol(rawSampleInfo) != 2) {
+                         if (is.null(dim(rawSampleInfo))) stop('Single column sample info file.')
+                         if (ncol(rawSampleInfo) == 2) {
+                           names(rawSampleInfo) <- c("sample_name", "sample_subtype")
+                         } else if (ncol(rawSampleInfo == 3)) {
+                           private$write_log('Assuming central column is sample group name.')
+                           private$write_log(names(rawSampleInfo))
+                           names(rawSampleInfo) <- c('sample_name', 'sample_group', 'sample_subtype')
+                         } else {
                            private$write_log("submitted sample metadata file is:")
                            private$write_log(head(rawSampleInfo))
                            private$write_log(c("Error: sample meta data must be ",
                                                "in form [sample_name, sample_annotations]"))
                            stop("sample meta data must be in form [sample_name, sample_annotations]")
                          }
-                         names(rawSampleInfo) <- c("sample_name", "sample_subtype")
                          self$sample_annotations <- rawSampleInfo
                        }
                        
                        # Load Count Data
+                       private$write_log('Reading count file.')
                        dupRawData <- tryCatch(fread(countFile, header = T),
-                                              warning = function(i) simpleError('Invalid countData file'))
+                                              warning = function(i) simpleError('Invalid countData file'),
+                                              error = function(i) simpleError('Invalid countData file'))
+                       message('Count file read.')
                        # check for duplicates, keep first instance.
                        if (any(duplicated(dupRawData[[1]]))) {
                          private$write_log('using first column as UNIQUE guide labels.')
@@ -144,13 +151,12 @@ DataObj <- R6Class("DataObj",
                        # check for non-numeric data.
                        if (any(sapply(rawData[,-(1:2), with=F],
                                       function(i) !is.na(i) & !is.numeric(i)))) {
-                         write.table(rawData[sapply(.SD, !is.na) &
-                                               sapply(.SD, !is.numeric),
-                                             .SDcols = -(1:2)],
-                                     quote = F,
-                                     row.names = F,
-                                     file = file.path('ACE_output_data','data_debug.txt'),)
-                         stop("non-numeric and not-NA data in raw count file.")
+                         private$write_log('Non-numeric and non-NA data in raw count file.')
+                         invalidCol <- which(sapply(rawData[,-(1:2), with=F],
+                                      function(i) any(!is.na(i) & !is.numeric(i)))) 
+                         private$write_log(head(rawData[,(invalidCol)+2, with=F]))
+                         private$write_log('Often caused be mis-ordered columns.')
+                         stop("non-numeric and not-NA data in raw count file. Columns ordered?")
                        }
                        # split into initial & dep counts if applicable.
                        if (hasInitSeq) {
@@ -179,6 +185,7 @@ DataObj <- R6Class("DataObj",
                        
                        # Read master data.
                        # use ModelObj to combine replicates etc.
+                       private$write_log('Reading master data.')
                        if (any(is.na(masterFiles)) & !hasInitSeq) {
                          private$write_log("Must provide initial counts or master library abundances.")
                          stop("Must provide initial counts or master library abundances.")
@@ -222,7 +229,6 @@ DataObj <- R6Class("DataObj",
                        self$master_counts <- master_counts
                        
                        # make column lookup table for sample-masterlib mapping
-                       sampleNames <- names(dep_counts)
                        if (any(is.na(masterFiles))) {
                          info_file <- NA
                        } else if (!is.na(sampleMasterInfoFile)) {
@@ -236,13 +242,7 @@ DataObj <- R6Class("DataObj",
                          } else {
                            names(info_file) <- c('sample', 'sampleType', 'masterlib')
                          }
-                         if (!all(sampleNames %in% info_file$sample)) {
-                           private$write_log('Sample names not in sampleMasterInfoFile:')
-                           private$write_log(sampleNames[which(!sampleNames %in% info_file$sample)])
-                           private$write_log(head(info_file))
-                           private$write_log('Error: sampleMasterInfoFile needs entry per count sample')
-                           stop("sampleMasterInfoFile needs entry per count sample")
-                         }
+
                          # if masterlib names entered with file extension, remove it.
                          mf_names <- lapply(info_file$masterlib,
                                             function(i) strsplit(i, '/')[[1]])
@@ -253,16 +253,18 @@ DataObj <- R6Class("DataObj",
                          }
                          setkey(info_file, sample)
                        } else if (length(masterFiles) == 1) {
+                         sampleNames <- names(dep_counts)
                          info_file <- data.table('sample' = sampleNames,
                                                  'masterlib' = names(master_counts))
+                         private$write_log('Using one master library for all samples.')
                          private$write_log(head(info_file))
-                         private$write_log(sampleNames)
+                         private$write_log(head(sampleNames))
                          setkey(info_file, sample)
                        } else {
                          stop("please provide assignment of master libraries to samples")
                        }
                        
-                       # Threshold data according to useSamples argument.
+                       # Use only count samples indicated in useSamples argument.
                        # meant to be an integer for single-sample analysis.
                        if (is.na(useSamples)) useSamples <- 1:ncol(dep_counts)
                        if (!(is.vector(useSamples, mode = 'integer') | is.integer(useSamples))) {
@@ -281,34 +283,42 @@ DataObj <- R6Class("DataObj",
                        }
 
                        self$dep_counts <- dep_counts[, (useSampleCols), with=F]
-                       # make sure chosen columns appropriately annotated, if relevant.
-                       if (is.data.table(self$sample_annotations)) {
-                         if (!all(names(self$dep_counts) %in% self$sample_annotations$sample_name)) {
-                           private$write_log(c('Error: ',
-                                               'Count data contains samples not incuded in annotations file',
-                                               ', requires subsampling (useSamples argument)',
-                                               ' in optimizeModelParameters.',
-                                               'Check count file, useSamples argument,',
-                                               ' or annotation file.'))
-                           stop(paste0('Count data contains samples not incuded in annotations file',
-                                       ', requires subsampling (useSamples argument)',
-                                       ' in optimizeModelParameters.'))
-                         } else {
-                           private$write_log('All samples annotated.')
-                         }
-                       } else { 
-                         private$write_log('No annotation file used.')
-                       }
-                       private$write_log(c('using samples: ', names(dep_counts)[useSampleCols]))
-                       message(c('Using ', length(useSampleCols), ' samples.'))
-                       finalSampleNames <- names(self$dep_counts)
                        
                        if (!is.data.table(info_file)) self$sample_masterlib <- NA
                        else {
-                         self$sample_masterlib <- info_file[sample %in% finalSampleNames,]
+                         self$sample_masterlib <- info_file
                        }
                        
+                       # make sure all samples appropriately annotated, if relevant.
+                       # take intersect of annotated, masterlib-annotated, and count-data-included
+                       # sample names, and subset all data accordingly.
+                       finalSampleNames <- names(self$dep_counts)
+                       if (is.data.table(self$sample_annotations)) {
+                         finalSampleNames <- intersect(finalSampleNames, self$sample_annotations$sample_name)
+                       }
+                       if (is.data.table(self$sample_masterlib)) {
+                         finalSampleNames <- intersect(finalSampleNames, self$sample_masterlib$sample)
+                       }
+                       private$write_log(c('using samples: ', finalSampleNames))
+                       message(c('Using ', length(finalSampleNames), ' samples.'))
                        
+                       if (is.data.table(self$sample_annotations)) {
+                         self$sample_annotations <- self$sample_annotations[sample_name %in% finalSampleNames, .SD]
+                       } else { 
+                         private$write_log('No annotation file used.')
+                       }
+                       if (is.data.table(self$sample_masterlib)) {
+                         self$sample_masterlib <- self$sample_masterlib[sample %in% finalSampleNames, .SD]
+                       } else {
+                         private$write_log('No master library used.')
+                       }
+                       if (is.data.table(self$init_counts)) {
+                         self$init_counts[, (finalSampleNames), with=F]
+                       } else {
+                         private$write_log('No initial sequencing counts used.')
+                       }
+                       self$dep_counts <- self$dep_counts[, .SD, .SDcols = finalSampleNames]
+
                        
                        
                        if (is.na(guideCovarFile)) {
