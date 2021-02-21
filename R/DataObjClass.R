@@ -313,7 +313,8 @@ DataObj <- R6Class("DataObj",
                          private$write_log('No master library used.')
                        }
                        if (is.data.table(self$init_counts)) {
-                         self$init_counts[, (finalSampleNames), with=F]
+                         finalInitNames <- which(names(self$dep_counts) %in% finalSampleNames)
+                         self$init_counts[, (finalInitNames), with=F]
                        } else {
                          private$write_log('No initial sequencing counts used.')
                        }
