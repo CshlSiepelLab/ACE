@@ -150,9 +150,9 @@ DataObj <- R6Class("DataObj",
                        }
                        setorderv(rawData, names(rawData)[2])
                        
-                       # check for non-numeric data.
+                       # check for non-numeric data; NA permitted.
                        if (any(sapply(rawData[,-(1:2), with=F],
-                                      function(i) !is.na(i) & !is.numeric(i)))) {
+                                      function(i) any(!is.na(i) & !is.numeric(i))))) {
                          private$write_log('Non-numeric and non-NA data in raw count file.')
                          invalidCol <- which(sapply(rawData[,-(1:2), with=F],
                                       function(i) any(!is.na(i) & !is.numeric(i)))) 
@@ -280,7 +280,6 @@ DataObj <- R6Class("DataObj",
                          } else {
                            useSampleNames <- names(dupRawData)[useSamples]
                            useSampleCols <- which(names(dep_counts) %in% useSampleNames)
-                           useSampleCols <- useSamples
                          }
                        }
                        
