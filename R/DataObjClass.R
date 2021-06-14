@@ -58,7 +58,9 @@ DataObj <- R6Class("DataObj",
                      #' @param hasInitSeq Default True; are counts for initial infected guides
                      #'                   present in count file?
                      #' @param sampleMasterInfoFile File mapping samples to masterlibrary files.
-                     #' @param useSamples Sample indices to analyze (subsets data stored in object).
+                     #' @param useSamples Optional.  Sample indices in countFile to analyze.
+                     #' Subsets data stored in object.
+                     #' Only depleted sample indices must be given; any initial samples will be auto-matched.
                      initialize = function(masterFiles=NA,
                                            countFile,
                                            negCtrlFile = NA,
@@ -266,16 +268,23 @@ DataObj <- R6Class("DataObj",
                        
                        # Use only count samples indicated in useSamples argument.
                        # meant to be an integer for single-sample analysis.
-                       if (any(is.na(useSamples))) useSamples <- 1:ncol(dep_counts)
-                       if (!(is.vector(useSamples, mode = 'integer') | is.integer(useSamples))) {
+                       if (any(is.na(useSamples))) {
+                         useSamples <- 1:ncol(dep_counts)
+                       } else if (!(is.vector(useSamples, mode = 'integer') | is.integer(useSamples))) {
                          stop('supply useSamples as integer indices.')
-                       }
-                       if ('sampleType' %in% info_file) {
-                         useSampleNames <- info_file[sampleType %in% unique(sampleType)[useSamples], sample]
-                         useSampleCols <- which(names(dep_counts) %in% useSampleNames)
                        } else {
-                         useSampleCols <- useSamples
+                         # Select samples using indices relative to original count file. 
+                         if (max(useSamples) > ncol(dupRawData)) {
+                           private$write_log('Indices in useSamples do not correspond to count file.')
+                           stop('Indices in useSamples do not correspond to count file.')
+                         } else {
+                           useSampleNames <- names(dupRawData)[useSamples]
+                           useSampleCols <- which(names(dep_counts) %in% useSampleNames)
+                           useSampleCols <- useSamples
+                         }
                        }
+                       
+                       
                        if (is.data.table(init_counts)) {
                          self$init_counts <- init_counts[, (useSampleCols), with=F]
                        } else {
