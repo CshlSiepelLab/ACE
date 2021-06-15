@@ -31,6 +31,10 @@ deriveSampleScaling <- function(user_DataObj,
                                 write_log) {
   # locally binding variable names used for DataObj columns.
   sgrna <- NULL
+  # sanity check.
+  if (!any(user_DataObj$dep_counts[, colSums(.SD)] > 0)) {
+    stop('No counts in any depleted samples, provide data for negative controls.')
+  }
   
   if (use_neg_ctrl) {
     useGuides <- which(user_DataObj$guide2gene_map$gene %in% neg_ctrls)
@@ -51,20 +55,23 @@ deriveSampleScaling <- function(user_DataObj,
                                   ][[useMasterlib]]
       base_counts[[i]] <- masterlib[useGuides]
     }
-    matchedMlibDT <- as.data.table(lapply(names(user_DataObj$dep_counts),
-                                          function(i) {
-                                            useMasterLib <- user_DataObj$sample_masterlib[sample == i,
-                                                                                          masterlib]
-                                            master_freq_dt[sgrna %in% user_DataObj$guide2gene_map$sgrna,
-                                                           (useMasterLib), with=F]
-                                          }))
-    numGuides <- nrow(user_DataObj$dep_counts)
-    deplete_50p_counts <- rbind(matchedMlibDT[sample.int(numGuides,
-                                                         size=.5*numGuides,
-                                                         replace=F), .SD],
-                                matrix(0, nrow = .5*numGuides,
-                                       ncol = ncol(user_DataObj$dep_counts)),
-                                use.names = F)
+    # If no neg ctrls being used, check for over-depleted libraries.
+    if (!use_neg_ctrl) {
+      matchedMlibDT <- as.data.table(lapply(names(user_DataObj$dep_counts),
+                                            function(i) {
+                                              useMasterLib <- user_DataObj$sample_masterlib[sample == i,
+                                                                                            masterlib]
+                                              master_freq_dt[sgrna %in% user_DataObj$guide2gene_map$sgrna,
+                                                             (useMasterLib), with=F]
+                                            }))
+      numGuides <- nrow(user_DataObj$dep_counts)
+      deplete_50p_counts <- rbind(matchedMlibDT[sample.int(numGuides,
+                                                           size=.5*numGuides,
+                                                           replace=F), .SD],
+                                  matrix(0, nrow = .5*numGuides,
+                                         ncol = ncol(user_DataObj$dep_counts)),
+                                  use.names = F)
+    }
   } else if (is.data.table(user_DataObj$init_counts)) {
     write_log('Scaling samples relative to mean abundance in initial samples.')
     message('Scaling samples relative to mean abundance in initial samples.')
@@ -81,16 +88,36 @@ deriveSampleScaling <- function(user_DataObj,
       # base_counts[[j]] <- rowMeans(normCounts[useGuides, log(.SD)] -
                                      # user_DataObj$init_counts[,log(colSums(0.5+.SD))])
     }
-    numGuides <- nrow(user_DataObj$init_counts)
-    deplete_50p_counts <- rbind(user_DataObj$init_counts[
-      sample.int(numGuides, size=.5*numGuides, replace=F), .SD],
-      matrix(0, nrow = .5*numGuides,
-             ncol = ncol(user_DataObj$init_counts)),
-      use.names = F)
-
+    # If no neg ctrls being used, check for over-depleted libraries.
+    if (!use_neg_ctrl) {
+      numGuides <- nrow(user_DataObj$init_counts)
+      deplete_50p_counts <- rbind(user_DataObj$init_counts[
+        sample.int(numGuides, size=.5*numGuides, replace=F), .SD],
+        matrix(0, nrow = .5*numGuides,
+               ncol = ncol(user_DataObj$init_counts)),
+        use.names = F)
+    }
   } else {
     stop('Must use the master library or initial abundances to scale samples.')
   }
+  
+  #check for overdispersion if no neg ctrls used.
+  # compare sd of depleted counts to the most variable
+  # masterlibrary counts, artificially depleted (50%)
+  if (!use_neg_ctrl) {
+    ref_scaling_ratio <- unlist(deplete_50p_counts[, lapply(.SD, function(i)
+      sd(i/mean(i)))])
+    dep_scaling_ratio <- unlist(user_DataObj$dep_counts[,lapply(.SD, function(i)
+      sd(i/mean(i)))])
+    if(any(dep_scaling_ratio > ref_scaling_ratio)) {
+      message('Excess of guides seem depleted; recommend using negative controls.')
+      message('Using controls?: ', use_neg_ctrl, "\n")
+      write_log('Excess of guides seem depleted; recommend using negative controls.')
+      write_log(c('Using controls?: ', use_neg_ctrl, "\n"))
+    }
+  }  
+  
+  # Calculate scaling relative to base counts.
   if (is.data.table(user_DataObj$init_counts)) {
     init_scaling <- sapply(seq_along(user_DataObj$init_counts),
                                function(i) {
@@ -119,15 +146,13 @@ deriveSampleScaling <- function(user_DataObj,
       stop('NA in init_scaling.')
     }
   } else init_scaling <- NA
-  if (any(user_DataObj$dep_counts[, colSums(.SD)] > 0)) {
+  
   dep_scaling <- sapply(seq_along(user_DataObj$dep_counts),
                         function(j) {
                           exp(median(log(0.5 + user_DataObj$dep_counts[[j]][useGuides])-
-                                   base_counts[[j]]) -
-                            log(user_DataObj$cells_infected[j]))})
-  } else {
-    stop('No counts in any depleted samples, provide data for negative controls.')
-  }
+                                       base_counts[[j]]) -
+                                log(user_DataObj$cells_infected[j]))})
+  
   if (any(sapply(dep_scaling, is.na))) {
     write_log('ERROR: NA in scaling parameter.')
     naIdx <- which(is.na(dep_scaling))
@@ -137,19 +162,6 @@ deriveSampleScaling <- function(user_DataObj,
     stop('NA in dep_scaling')
   }
 
-  #check for overdispersion.
-  # compare sd of depleted counts to the most variable
-  # masterlibrary counts, artificially depleted (50%)
-  ref_scaling_ratio <- unlist(deplete_50p_counts[, lapply(.SD, function(i)
-    sd(i/mean(i)))])
-  dep_scaling_ratio <- unlist(user_DataObj$dep_counts[,lapply(.SD, function(i)
-    sd(i/mean(i)))])
-  if(any(dep_scaling_ratio > ref_scaling_ratio)) {
-    message('Excess of guides seem depleted; recommend using negative controls.')
-    message('Using controls?: ', use_neg_ctrl, "\n")
-    write_log('Excess of guides seem depleted; recommend using negative controls.')
-    write_log(c('Using controls?: ', use_neg_ctrl, "\n"))
-  }
 
   return(list('init_scaling'=init_scaling, 'dep_scaling'=dep_scaling))
 }

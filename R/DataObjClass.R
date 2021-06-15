@@ -269,7 +269,7 @@ DataObj <- R6Class("DataObj",
                        # Use only count samples indicated in useSamples argument.
                        # meant to be an integer for single-sample analysis.
                        if (any(is.na(useSamples))) {
-                         useSamples <- 1:ncol(dep_counts)
+                         useSampleCols <- 1:ncol(dep_counts)
                        } else if (!(is.vector(useSamples, mode = 'integer') | is.integer(useSamples))) {
                          stop('supply useSamples as integer indices.')
                        } else {
