@@ -357,16 +357,14 @@ ModelObj <- R6Class("ModelObj",
                         # Debug everything calculated properly.
                         # mean_var_model_params can be a list of 2 numerics. Or a vector length guides.
                         # guide_features should be a numeric matrix [numGuides x numFeatures].
-                        if (any(sapply(c(self$mean_var_model_params,
-                                         self$unobserved_infected_cell_values, self$mean_var_model),
-                                       function(i) any(is.na(unlist(i)))))) {
+                        if (any(is.na(c(unlist(self$mean_var_model_params), 
+                                        unlist(self$mean_var_model))))) {
                           private$write_log("ERROR: NA's generated in model object in:")
                           if (any(is.na(self$mean_var_model))) private$write_log("mean_var_model")
                           if (any(is.na(self$mean_var_model_params))) private$write_log("mean_var_Model_params")
                           stop("Error in ModelObjClass; inappropriate NA's found in data.")
                         }
                       }
-                      
                     )
 )
 # -------------------------------- End of Script -----------------------------------
