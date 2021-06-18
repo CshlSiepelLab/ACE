@@ -96,9 +96,11 @@ present in count file?}
 
 \item{\code{sampleMasterInfoFile}}{File mapping samples to masterlibrary files.}
 
-\item{\code{useSamples}}{Sample indices to analyze (subsets data stored in object).
-Write messages and warnings to log file.
-@param message_vector String or table to write.}
+\item{\code{useSamples}}{Optional.  Sample indices in countFile to analyze.
+Subsets data stored in object.
+Only depleted sample indices must be given; any initial samples will be auto-matched.
+ Write messages and warnings to log file.
+ @param message_vector String or table to write.}
 }
 \if{html}{\out{</div>}}
 }

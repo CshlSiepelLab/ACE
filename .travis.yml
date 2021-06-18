@@ -1,5 +1,7 @@
 language: r
 
+r: 4.0
+
 before_install:
   - tlmgr install extsizes
 
