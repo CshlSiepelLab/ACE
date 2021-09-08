@@ -6,6 +6,9 @@
 <!-- badges: start -->
 [![Codecov test coverage](https://codecov.io/gh/CshlSiepelLab/ACE/branch/master/graph/badge.svg)](https://codecov.io/gh/CshlSiepelLab/ACE?branch=master)
 [![Build Status](https://travis-ci.com/CshlSiepelLab/ACE.svg?token=ULtSN5KyvxhgFXqRqPas&branch=main)](https://travis-ci.com/CshlSiepelLab/ACE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5493071.svg)](https://doi.org/10.5281/zenodo.5493071)
+
+
 <!-- badges: end -->
 
 The goal of ACER is to test for differential essentiality
