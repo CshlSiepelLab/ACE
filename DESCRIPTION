@@ -1,6 +1,6 @@
 Package: ACER
 Title: Analysis of CRISPR Essentiality in R
-Version: 0.0.0.7
+Version: 0.1
 Authors@R: person("Elizabeth", "Hutton", email = "erosehutton@gmail.com", role = c("aut", "cre"))
 Description: Accepts mapped read counts for CRISPR screens and calculates by-gene essentiality.
 Depends: R (>= 3.3.2), data.table,R6
